@@ -1,0 +1,14 @@
+project
+*.pyc
+*~
+backup
+.idea
+.vscode
+*.ipynb_checkpoints
+*.profile.log
+__pycache__
+tags
+/multvt2vds.users.log
+/multvt2vds.freq.log
+wip*
+*.code-workspace
