@@ -1,5 +1,7 @@
 # synthoseis
 
+![alt text](img/synthoseis_logo.png)
+
 Generating seismic data and associated labels to train deep learning networks.
 
 ## Overview
