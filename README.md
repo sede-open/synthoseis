@@ -11,6 +11,10 @@ Synthoseis is an open-source, Python-based tool used for generating pseudo-rando
 The goal of synthoseis is to generate realistic seismic data for training a deep learning network to identify features of interest in field-acquired seismic data.
 Such training data should be plentiful, cover a diverse range of subsurface scenarios and provide quality training labels.
 
+## Documentation
+
+Read our documentation: https://sede-open.github.io/synthoseis/datagenerator.html
+
 ## Installation
 
 We provide an [environment.yml](environment.yml) to install the required packages for synthoseis.
