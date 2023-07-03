@@ -353,7 +353,7 @@ class RandomHorizonStack(Horizons):
         )
         # Dips
         self.dips = (
-            (1.0 - random.power(100, self.cfg.num_lyr_lut))
+            (1.0 - np.random.power(100, self.cfg.num_lyr_lut))
             * 7.0
             * self.cfg.dip_factor_max
         )
@@ -440,13 +440,13 @@ class RandomHorizonStack(Horizons):
         yi = np.linspace(-0.15, 1.15, int(grid_size[1] * 1.3))
 
         # start with a gently dipping plane similar to that found on passive shelf margins (< 1 degree dip)
-        azimuth = random.uniform(0.0, 360.0)
-        dip = random.uniform(dip_range[0], dip_range[1])
+        azimuth = np.random.uniform(0.0, 360.0)
+        dip = np.random.uniform(dip_range[0], dip_range[1])
 
         # build a residual surface to add to the dipping plane
-        number_halton_points = int(random.uniform(100, 500) + 0.5)
+        number_halton_points = int(np.random.uniform(100, 500) + 0.5)
         number_random_points = int(
-            random.uniform(num_points_range[0], num_points_range[1]) + 0.5
+            np.random.uniform(num_points_range[0], num_points_range[1]) + 0.5
         )
         z = np.random.rand(number_random_points)
         z -= z.mean()
