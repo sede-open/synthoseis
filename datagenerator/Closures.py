@@ -3160,7 +3160,7 @@ def flood_fill_heap(test_array, empty_value=1.0e22, quiet=True):
 
     # Build mask of cells with data not on the edge of the image
     # Use 3x3 square structuring element
-    el = ndimage.generate_binary_structure(2, 2).astype(np.int)
+    el = ndimage.generate_binary_structure(2, 2).astype(int)
     inside_mask = ndimage.binary_erosion(~np.isnan(input_array), structure=el)
     inside_mask[input_array == empty_value] = False
     edge_mask = np.invert(inside_mask)

@@ -1473,7 +1473,7 @@ class RFC:
         if dtype == "float":
             return np.radians(self.theta)
         else:
-            return np.radians(self.theta).astype(np.complex)
+            return np.radians(self.theta).astype(complex)
 
 
 def derive_butterworth_bandpass(lowcut, highcut, digitisation, order=4):
