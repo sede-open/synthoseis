@@ -12,3 +12,4 @@ tags
 /multvt2vds.freq.log
 wip*
 *.code-workspace
+.DS_Store
