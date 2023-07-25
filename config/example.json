@@ -1,7 +1,7 @@
 {
   "project": "example1",
-  "project_folder": "/Users/Mike.McIntire/mikes_sandbox/synthoseis/seismic_example/test4",
-  "work_folder": "/Users/Mike.McIntire/mikes_sandbox/synthoseis/seismic_example",
+  "project_folder": "/Users/chris.samuel/projects/synthoseis/seismic_example/test4",
+  "work_folder": "/Users/chris.samuel/projects/synthoseis/seismic_example",
   "cube_shape": [300, 300, 1250],
   "incident_angles": [7, 15, 24],
   "digi": 4,
