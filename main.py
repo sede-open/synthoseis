@@ -19,16 +19,20 @@ def build_model(user_json: str, run_id, test_mode: int = None, rpm_factors=None)
     # Set up model parameters
     p = Parameters(user_json, runid=run_id, test_mode=test_mode)
     p.setup_model(rpm_factors=rpm_factors)
+    print('Setup Complete')
 
     p.hdf_setup(os.path.join(p.temp_folder, "model_data.hdf"))
     # Build un-faulted depth maps and facies array
     depth_maps, onlap_list, fan_list, fan_thicknesses = \
         build_unfaulted_depth_maps(p)
     facies = create_facies_array(p, depth_maps, onlap_list, fan_list)
+    print('Facies and unfaulted depth map setup complete')
+
 
     # Build un-faulted geological models
     geo_models = Geomodel(p, depth_maps, onlap_list, facies)
     geo_models.build_unfaulted_geomodels()
+    print('Unfaulted Geomodel Complete')
 
     # Build Faults
     f = Faults(p, depth_maps, onlap_list, geo_models, fan_list, fan_thicknesses)
@@ -36,11 +40,13 @@ def build_model(user_json: str, run_id, test_mode: int = None, rpm_factors=None)
     f.apply_faulting_to_geomodels_and_depth_maps()
     # Build faulted lithology, net_to_gross and depth and randomised models
     f.build_faulted_property_geomodels(facies)
+    print('Faults Complete')
 
     # Create closures, remove false closures and and output closures
     closures = Closures(p, f, facies, onlap_list)
     closures.create_closures()
     closures.write_closure_volumes_to_disk()
+    print('Closures Complete')
 
     # Create 3D qc plot
     if p.qc_plots:

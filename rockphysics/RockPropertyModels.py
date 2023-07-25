@@ -142,10 +142,10 @@ def decimate_array_to_1d(cfg, in_array, xy_factor=10, z_factor=1):
 
 
 def select_rpm(cfg):
-    if cfg.project == "example":
+    if cfg.project == "example1":
         from rockphysics.rpm_example import RPMExample
 
-        rpm = RPMExample(cfg, phic=0.4, athys_exp=0.2)
+        rpm = RPMExample(cfg)
     return rpm
 
 

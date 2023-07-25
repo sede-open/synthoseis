@@ -743,11 +743,11 @@ class Onlaps(Horizons):
                     )
                 onlaps_horizon_list.append(i)
 
-                if not self.cfg.regen:
-                    azi = np.random.uniform(low=0.0, high=360.0)
-                    azi_list.append(azi)
-                    dip = np.random.uniform(low=5.0, high=20.0)
-                    dip_list.append(dip)
+                # if not self.cfg.regen:
+                azi = np.random.uniform(low=0.0, high=360.0)
+                azi_list.append(azi)
+                dip = np.random.uniform(low=5.0, high=20.0)
+                dip_list.append(dip)
 
                 dipping_plane2 = (
                     self._fit_plane_strike_dip(
