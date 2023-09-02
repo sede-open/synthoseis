@@ -2153,10 +2153,8 @@ class Faults(Horizons, Geomodel):
                         random_idx = []
                         do_it = False
                         break
-                if do_it:
-                    from scipy import random
 
-                    random_idx = xyz_xyz[:, random.choice(xyz_xyz.shape[1])]
+                    random_idx = xyz_xyz[:, np.random.choice(xyz_xyz.shape[1])]
                     print(
                         "   ... Computing fault middle to hang max displacement function"
                     )
@@ -2241,12 +2239,12 @@ class Faults(Horizons, Geomodel):
         # Max throw == 16000
         scale_factor = 16000 / fault_length[-1]
         # Coef random selection moved to top of function
-        variance_x = scale_factor * fault_length[np.where(throw_range == int(throw))]
+        variance_x = scale_factor * fault_length[np.where(throw_range == int(throw))].item()
         variance_y = variance_x * coef
         # Do the same for the drag zone area
         fault_length_drag = fault_length / 10000
         variance_x_drag = (
-            scale_factor * fault_length_drag[np.where(throw_range == int(throw))]
+            scale_factor * fault_length_drag[np.where(throw_range == int(throw))].item()
         )
         variance_y_drag = variance_x_drag * coef
         # Rotation from z_idx to center
