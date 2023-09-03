@@ -4,7 +4,7 @@ from bruges.rockphysics import moduli
 
 
 class RPMExample:
-    def __init__(self, cfg):
+    def __init__(self, cfg, *args, **kwargs):
         self.cfg = cfg
 
     def create_1d_trends(self, z=None, store_in_hdf=True):
