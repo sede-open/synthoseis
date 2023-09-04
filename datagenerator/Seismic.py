@@ -382,8 +382,8 @@ class SeismicVolume(Geomodel):
         if verbose:
             print("   ... inside noise3D")
 
-        noise_seed = np.random.randint(1, high=2 ** 32 - 1)
-        sign_seed = np.random.randint(1, high=2 ** 32 - 1)
+        noise_seed = np.random.randint(1, high=(2 ** (32 - 1)))
+        sign_seed = np.random.randint(1, high=(2 ** (32 - 1)))
 
         np.random.seed(noise_seed)
         noise3d = np.random.exponential(

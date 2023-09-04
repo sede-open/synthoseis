@@ -1016,9 +1016,9 @@ class BasinFloorFans(Horizons):
         # decimate the grid randomly
         decimation_factor = 250
 
-        fan_seed_x = np.random.randint(1, high=2 ** 32 - 1)
-        fan_seed_y = np.random.randint(1, high=2 ** 32 - 1)
-        fan_seed_z = np.random.randint(1, high=2 ** 32 - 1)
+        fan_seed_x = np.random.randint(1, high=(2 ** (32 - 1)))
+        fan_seed_y = np.random.randint(1, high=(2 ** (32 - 1)))
+        fan_seed_z = np.random.randint(1, high=(2 ** (32 - 1)))
         point_indices = np.arange(x.size).astype("int")
         point_indices = point_indices[: x.size // decimation_factor]
         np.random.shuffle(point_indices)
