@@ -145,7 +145,7 @@ def select_rpm(cfg):
     if cfg.project == "example":
         from rockphysics.rpm_example import RPMExample
 
-        rpm = RPMExample(cfg, phic=0.4, athys_exp=0.2)
+        rpm = RPMExample(cfg)
     return rpm
 
 
