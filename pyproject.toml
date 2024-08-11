@@ -5,13 +5,14 @@ description = "Generating seismic data and associated labels to train deep neura
 authors = ["Your Name <you@example.com>"]
 license = "MIT"
 readme = "README.md"
+package-mode = false
 
 [tool.poetry.dependencies]
 python = ">=3.9,<3.13"
 h5py = "^3.9.0"
 matplotlib = "^3.7.2"
-numpy = "^1.25.2"
-scikit-image = "^0.21.0"
+numpy = "1.26.4"
+scikit-image = "^0.24.0"
 scipy = "^1.11.2"
 tqdm = "^4.66.1"
 tables = "^3.8.0"
