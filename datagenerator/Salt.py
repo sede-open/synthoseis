@@ -7,14 +7,15 @@ class SaltModel:
     """
     Salt Model Class
     ----------------
-    
+
     This class creates a 3D salt body and inserts it into the input cube.
     """
+
     def __init__(self, parameters) -> None:
         """
         Initialization function
         -----------------------
-        
+
         Initializes the SaltModel class.
 
 
@@ -22,7 +23,7 @@ class SaltModel:
         ----------
         parameters : datagenerator.Parameters
             The parameters of the project.
-        
+
         Returns
         -------
         None
@@ -96,7 +97,7 @@ class SaltModel:
             Radius of circle
         verbose : bool, optional
             Print points while building circle. Defaults to False.
-        
+
         Returns
         -------
         None
@@ -135,10 +136,10 @@ class SaltModel:
         ------------------
 
         Creates clouds of points representing the top or base of a salt body.
-        
+
         Parameters
         ----------
-        centre_points : list 
+        centre_points : list
             Z-coordinates for deep, mid, shallow and tip locations
         radii : list
             Radius constants for deep, mid and shallow circles
@@ -146,7 +147,7 @@ class SaltModel:
             X-coordinate for centre of point cloud
         cy : float
             Y-coordinate for centre of point cloud
-        
+
         Returns
         -------
         None
@@ -198,7 +199,7 @@ class SaltModel:
         -------
         None
         """
-        # Points built to model the crest of a salt body, with 
+        # Points built to model the crest of a salt body, with
         # gentle anitclinal structure
         # Z-coordinates for center of top salt
         C1_deep = (top + salt_radius) * 1.1
@@ -326,9 +327,9 @@ class SaltModel:
             )
 
             _label = salt_segments[ii, jj, faulted_depth_map_indices]
-            depth_maps_gaps_horizon[
-                depth_maps_gaps_horizon == 0.0
-            ] = np.nan  # reset nan's
+            depth_maps_gaps_horizon[depth_maps_gaps_horizon == 0.0] = (
+                np.nan
+            )  # reset nan's
             depth_maps_gaps_horizon[_label > 0] = np.nan
             depth_maps_gaps_salt[..., ihorizon] = depth_maps_gaps_horizon
             try:
