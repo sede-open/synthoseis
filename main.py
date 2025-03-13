@@ -1,4 +1,5 @@
 """Entry point for building a syntehtic model."""
+
 import argparse
 import datetime
 import os
@@ -22,8 +23,7 @@ def build_model(user_json: str, run_id, test_mode: int = None, rpm_factors=None)
 
     p.hdf_setup(os.path.join(p.temp_folder, "model_data.hdf"))
     # Build un-faulted depth maps and facies array
-    depth_maps, onlap_list, fan_list, fan_thicknesses = \
-        build_unfaulted_depth_maps(p)
+    depth_maps, onlap_list, fan_list, fan_thicknesses = build_unfaulted_depth_maps(p)
     facies = create_facies_array(p, depth_maps, onlap_list, fan_list)
 
     # Build un-faulted geological models
@@ -86,9 +86,15 @@ def build_model(user_json: str, run_id, test_mode: int = None, rpm_factors=None)
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "-t", "--test_mode", help="Run in testing mode, number will g", default=None, type=int
+        "-t",
+        "--test_mode",
+        help="Run in testing mode, number will g",
+        default=None,
+        type=int,
     )
-    parser.add_argument("-c", "--config_file", help="Provide model parameter file", required=True)
+    parser.add_argument(
+        "-c", "--config_file", help="Provide model parameter file", required=True
+    )
     parser.add_argument(
         "-n", "--num_runs", help="Number of models to create", default=1, type=int
     )

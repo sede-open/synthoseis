@@ -18,6 +18,7 @@ class SeismicVolume(Geomodel):
 
     This class initializes the seismic volume that contains everything.
     """
+
     def __init__(self, parameters, faults, closures) -> None:
         """
         __init__
@@ -33,7 +34,7 @@ class SeismicVolume(Geomodel):
             The faults array.
         closures : np.ndarray
             The closures array.
-        
+
         Returns
         -------
         None
@@ -93,10 +94,7 @@ class SeismicVolume(Geomodel):
 
         """
         rpm = select_rpm(self.cfg)
-        self.build_property_models_randomised_depth(
-            rpm,
-            mixing_method=mixing_method
-        )
+        self.build_property_models_randomised_depth(rpm, mixing_method=mixing_method)
 
     def bandlimit_volumes_wavelets(self, n_wavelets=10):
         # Pre-prepared n, m, f filter_specs from npy file
@@ -255,7 +253,9 @@ class SeismicVolume(Geomodel):
         if self.cfg.model_qc_volumes:
             _ = self.postprocess_rfc_cubes(self.rfc_raw[:], "noise_free", bb=False)
             if self.cfg.broadband_qc_volume:
-                _ = self.postprocess_rfc_cubes(self.rfc_raw[:], "noise_free_bb", bb=True)
+                _ = self.postprocess_rfc_cubes(
+                    self.rfc_raw[:], "noise_free_bb", bb=True
+                )
             normalised_cumsum_rmo = self.apply_rmo(normalised_cumsum)
             self.apply_augmentations(normalised_cumsum_rmo, name="cumsum_RMO")
 
@@ -497,7 +497,7 @@ class SeismicVolume(Geomodel):
         if self.cfg.verbose:
             print(f"\t... Low Frequency; {low:.2f} Hz, High Frequency: {high:.2f} Hz")
             print(
-                f"\t... start_width: {1. / (dt * low):.4f}, end_width: {1. / (dt * high):.4f}"
+                f"\t... start_width: {1.0 / (dt * low):.4f}, end_width: {1.0 / (dt * high):.4f}"
             )
 
         # Loop over 3D angle stack arrays
@@ -705,7 +705,7 @@ class SeismicVolume(Geomodel):
             Rock properties model.
         mixing_method : str
             Mixing method for randomised depth.
-        
+
         Returns
         -------
         None
@@ -1158,7 +1158,7 @@ class SeismicVolume(Geomodel):
             pct_change_vs = delta_vs.mean().round(3)
             print(
                 f" ... shale: randomization percent change (rho,vp,vs) = "
-                f"{pct_change_rho}, {pct_change_vp }, {pct_change_vs}"
+                f"{pct_change_rho}, {pct_change_vp}, {pct_change_vs}"
             )
             print(
                 f" ... shale: min/max pre-randomization (rho, vp, vs)  = "
@@ -1243,7 +1243,7 @@ class SeismicVolume(Geomodel):
             pct_change_vs = delta_vs.mean().round(3)
             print(
                 f" ... {fluid}: randomization percent change (rho,vp,vs) = "
-                f"{pct_change_rho}, {pct_change_vp }, {pct_change_vs}"
+                f"{pct_change_rho}, {pct_change_vp}, {pct_change_vs}"
             )
             print(
                 f" ... {fluid}: min/max pre-randomization (rho, vp, vs)  = "
@@ -1284,7 +1284,7 @@ class SeismicVolume(Geomodel):
             props.vp_ff,
             props.vs_ff,
         ]:
-            for (x, y, z) in np.argwhere(vol == 0.0):
+            for x, y, z in np.argwhere(vol == 0.0):
                 vol[x, y, z] = vol[x, y, z - 1]
         return props
 
@@ -1416,7 +1416,7 @@ class RFC:
 
         # 3 Term Shuey
         r0 = 0.5 * (d_vp / avg_vp + d_rho / avg_rho)
-        g = 0.5 * (d_vp / avg_vp) - 2.0 * avg_vs ** 2 / avg_vp ** 2 * (
+        g = 0.5 * (d_vp / avg_vp) - 2.0 * avg_vs**2 / avg_vp**2 * (
             d_rho / avg_rho + 2.0 * d_vs / avg_vs
         )
         f = 0.5 * (d_vp / avg_vp)
@@ -1444,16 +1444,14 @@ class RFC:
             self.rho_upper * (1 - 2 * np.sin(phi1) ** 2.0)
             + 2 * self.rho_lower * np.sin(phi2) ** 2.0
         )
-        d = 2 * (
-            self.rho_lower * self.vs_lower ** 2 - self.rho_upper * self.vs_upper ** 2
-        )
+        d = 2 * (self.rho_lower * self.vs_lower**2 - self.rho_upper * self.vs_upper**2)
 
         e = (b * np.cos(theta) / self.vp_upper) + (c * np.cos(theta2) / self.vp_lower)
         f = (b * np.cos(phi1) / self.vs_upper) + (c * np.cos(phi2) / self.vs_lower)
         g = a - d * np.cos(theta) / self.vp_upper * np.cos(phi2) / self.vs_lower
         h = a - d * np.cos(theta2) / self.vp_lower * np.cos(phi1) / self.vs_upper
 
-        d = e * f + g * h * p ** 2
+        d = e * f + g * h * p**2
 
         zoep_pp = (
             f
@@ -1462,7 +1460,7 @@ class RFC:
                 - c * (np.cos(theta2) / self.vp_lower)
             )
             - h
-            * p ** 2
+            * p**2
             * (a + d * (np.cos(theta) / self.vp_upper) * (np.cos(phi2) / self.vs_lower))
         ) * (1 / d)
 
