@@ -1,4 +1,5 @@
 import os
+import sys
 import numpy as np
 from bruges.rockphysics import moduli
 
@@ -34,13 +35,11 @@ class RockProperties:
         self.z = depth
 
     def calc_ai(self) -> float:
-        """calc_ai A function that calculates camplitude impedance of the rock
-        """
+        """calc_ai A function that calculates camplitude impedance of the rock"""
         self.ai = self.rho * self.vp
 
     def calc_si(self) -> float:
-        """calc_si Function that computes the shear wave impedance of the rock
-        """
+        """calc_si Function that computes the shear wave impedance of the rock"""
         self.si = self.rho * self.vs
 
     def calc_vpvs(self) -> float:
@@ -49,7 +48,7 @@ class RockProperties:
     def calc_pr(self) -> float:
         if self.vpvs is None:
             self.calc_vpvs()
-        self.pr = (self.vpvs ** 2 - 2) / (2 * self.vpvs ** 2 - 2)
+        self.pr = (self.vpvs**2 - 2) / (2 * self.vpvs**2 - 2)
 
     def calc_m(self) -> float:
         self.m = moduli.pmod(vp=self.vp, rho=self.rho)
@@ -142,10 +141,24 @@ def decimate_array_to_1d(cfg, in_array, xy_factor=10, z_factor=1):
 
 
 def select_rpm(cfg):
+    """Select the rock property model to use.
+
+    User must add their own rock property model to the select_rpm function,
+    and set the cfg.project variable to the name of the rock property model.
+    """
     if cfg.project == "example":
         from rockphysics.rpm_example import RPMExample
 
         rpm = RPMExample(cfg)
+    elif cfg.project == "abc":
+        from rockphysics.rpm_abc import RPMABC
+
+        print("Using the abcRPM")
+        rpm = RPMABC(cfg)
+    else:
+        print("No rock property model defined in select_rpm")
+        print("Exiting code")
+        sys.exit(1)
     return rpm
 
 
@@ -279,9 +292,7 @@ def rpm_qc_plots(cfg, rpm):
     ai_shale = rho_shale * vp_shale
     si_shale = rho_shale * vs_shale
     vpvs_shale = vp_shale / vs_shale
-    pr_shale = (vp_shale ** 2.0 - 2.0 * vs_shale ** 2) / (
-        2.0 * (vp_shale ** 2 - vs_shale ** 2)
-    )
+    pr_shale = (vp_shale**2.0 - 2.0 * vs_shale**2) / (2.0 * (vp_shale**2 - vs_shale**2))
     axs[0].scatter(
         ai_shale[::10],
         si_shale[::10],
@@ -332,9 +343,7 @@ def rpm_qc_plots(cfg, rpm):
     ai_sand = rho_sand * vp_sand
     si_sand = rho_sand * vs_sand
     vpvs_sand = vp_sand / vs_sand
-    pr_sand = (vp_sand ** 2.0 - 2.0 * vs_sand ** 2) / (
-        2.0 * (vp_sand ** 2 - vs_sand ** 2)
-    )
+    pr_sand = (vp_sand**2.0 - 2.0 * vs_sand**2) / (2.0 * (vp_sand**2 - vs_sand**2))
     axs[0].scatter(
         ai_sand, si_sand, label="Brine Sand", c="Blue", alpha=0.1, marker="."
     )
@@ -371,8 +380,8 @@ def rpm_qc_plots(cfg, rpm):
         ai_oil_sand = rho_oil_sand * vp_oil_sand
         si_oil_sand = rho_oil_sand * vs_oil_sand
         vpvs_oil_sand = vp_oil_sand / vs_oil_sand
-        pr_oil_sand = (vp_oil_sand ** 2.0 - 2.0 * vs_oil_sand ** 2) / (
-            2.0 * (vp_oil_sand ** 2 - vs_oil_sand ** 2)
+        pr_oil_sand = (vp_oil_sand**2.0 - 2.0 * vs_oil_sand**2) / (
+            2.0 * (vp_oil_sand**2 - vs_oil_sand**2)
         )
         axs[0].scatter(ai_oil_sand, si_oil_sand, c="Green", alpha=0.1, marker=".")
         axs[1].scatter(ai_oil_sand, vpvs_oil_sand, c="Green", alpha=0.1, marker=".")
@@ -404,8 +413,8 @@ def rpm_qc_plots(cfg, rpm):
         ai_gas_sand = rho_gas_sand * vp_gas_sand
         si_gas_sand = rho_gas_sand * vs_gas_sand
         vpvs_gas_sand = vp_gas_sand / vs_gas_sand
-        pr_gas_sand = (vp_gas_sand ** 2.0 - 2.0 * vs_gas_sand ** 2) / (
-            2.0 * (vp_gas_sand ** 2 - vs_gas_sand ** 2)
+        pr_gas_sand = (vp_gas_sand**2.0 - 2.0 * vs_gas_sand**2) / (
+            2.0 * (vp_gas_sand**2 - vs_gas_sand**2)
         )
         axs[0].scatter(
             ai_gas_sand, si_gas_sand, label="Gas Sand", c="Red", alpha=0.1, marker="."
@@ -458,14 +467,14 @@ def clip_vs_via_poissons_ratio(vp, vs):
     """If Vp / Vs < sqrt(2), then clip Vs to sqrt(vp**2 / 2)
     This ensures poissons ratio stays positive
     """
-    return np.where(vp / vs < 2 ** 0.5, ((vp ** 2) / 2) ** 0.5, vs)
+    return np.where(vp / vs < 2**0.5, ((vp**2) / 2) ** 0.5, vs)
 
 
 def clip_vp_via_poissons_ratio(vp, vs):
     """If Vp / Vs < sqrt(2), then clip Vp to sqrt(2) * vs
     This ensures poissons ratio stays positive
     """
-    return np.where(vp / vs < 2 ** 0.5, np.sqrt(2) * vs, vp)
+    return np.where(vp / vs < 2**0.5, np.sqrt(2) * vs, vp)
 
 
 def store_1d_trend_dict_to_hdf(cfg, d, z):
