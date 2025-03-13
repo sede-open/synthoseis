@@ -1,26 +1,19 @@
-[tool.poetry]
+[project]
 name = "synthoseis"
-version = "1.0.0"
-description = "Generating seismic data and associated labels to train deep neural networks."
-authors = ["Your Name <you@example.com>"]
-license = "MIT"
+version = "0.1.0"
+description = "Add your description here"
 readme = "README.md"
-package-mode = false
-
-[tool.poetry.dependencies]
-python = ">=3.9,<3.13"
-h5py = "^3.9.0"
-matplotlib = "^3.7.2"
-numpy = "1.26.4"
-scikit-image = "^0.24.0"
-scipy = "^1.11.2"
-tqdm = "^4.66.1"
-tables = "^3.8.0"
-plotly = "^5.16.1"
-bruges = "^0.5.4"
-noise = "^1.2.2"
-
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires-python = ">=3.9"
+dependencies = [
+    "bruges>=0.5.4",
+    "matplotlib",
+    "noise>=1.2.2",
+    "numpy<2",
+    "plotly",
+    "ruff>=0.10.0",
+    "scikit-image",
+    "scipy",
+    "setuptools>=76.0.0",
+    "tables>=3.9.2",
+    "tqdm",
+]
