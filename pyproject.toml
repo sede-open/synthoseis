@@ -10,6 +10,7 @@ dependencies = [
     "noise>=1.2.2",
     "numpy<2",
     "plotly",
+    "ruff>=0.10.0",
     "scikit-image",
     "scipy",
     "setuptools>=76.0.0",
