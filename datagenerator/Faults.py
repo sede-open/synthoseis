@@ -21,11 +21,12 @@ class Faults(Horizons, Geomodel):
         The Horizons class used to build the faults.
     Geomodel : data_generator.Geomodels
         The Geomodel class used to build the faults.
-    
+
     Returns
     -------
     None
     """
+
     def __init__(
         self,
         parameters: Parameters,
@@ -33,7 +34,7 @@ class Faults(Horizons, Geomodel):
         onlap_horizon_list: np.ndarray,
         geomodels: Geomodel,
         fan_horizon_list: np.ndarray,
-        fan_thickness: np.ndarray
+        fan_thickness: np.ndarray,
     ):
         """__init__
 
@@ -121,10 +122,10 @@ class Faults(Horizons, Geomodel):
           faulting and interpolation.
         * Write cubes to file (if qc_volumes turned on in config.json)
 
-        (If segmentation is not reset to binary, the multiple 
+        (If segmentation is not reset to binary, the multiple
         interpolations for successive faults destroys the crisp
         localization of the labels. Subjective observation suggests
-        that slightly different thresholds for different 
+        that slightly different thresholds for different
         features provide superior results)
 
         Parameters
@@ -286,10 +287,7 @@ class Faults(Horizons, Geomodel):
             except ValueError:
                 self.cfg.write_to_logfile("3D Fault Plotting Failed")
 
-    def build_faulted_property_geomodels(
-        self,
-        facies: np.ndarray
-    ) -> None:
+    def build_faulted_property_geomodels(self, facies: np.ndarray) -> None:
         """
         Build Faulted Property Geomodels
         ------------
@@ -303,7 +301,7 @@ class Faults(Horizons, Geomodel):
         - lithology
         - net_to_gross (to create effective sand layers)
         - depth below mudline
-        - randomised depth below mudline (to 
+        - randomised depth below mudline (to
           randomise the rock properties per layer)
 
         Parameters
@@ -374,7 +372,6 @@ class Faults(Horizons, Geomodel):
                 ng_map = self.create_random_net_over_gross_map()
 
             for k in range(thickness_map_max + 1):
-
                 if self.cfg.partial_voxels:
                     # compute fraction of voxel containing layer
                     top_map = np.max(
@@ -429,7 +426,7 @@ class Faults(Horizons, Geomodel):
                         input_cube[input_cube != -1.0] += values[input_cube != -1.0]
                         work_cube_lith[
                             sublayer_ii, sublayer_jj, sublayer_depth_map_int
-                        ] = (input_cube * 1.0)
+                        ] = input_cube * 1.0
                         del input_cube
                         del values
 
@@ -443,18 +440,18 @@ class Faults(Horizons, Geomodel):
                         input_cube[input_cube != -1.0] += values[input_cube != -1.0]
                         work_cube_sealed[
                             sublayer_ii, sublayer_jj, sublayer_depth_map_int
-                        ] = (input_cube * 1.0)
+                        ] = input_cube * 1.0
                         del input_cube
                         del values
 
                         # Depth cube
                         work_cube_depth[
                             sublayer_ii, sublayer_jj, sublayer_depth_map_int
-                        ] += (sublayer_tvdml_map * sublayer_fraction)
+                        ] += sublayer_tvdml_map * sublayer_fraction
                         # Net to Gross cube
                         work_cube_net_to_gross[
                             sublayer_ii, sublayer_jj, sublayer_depth_map_int
-                        ] += (sublayer_ng_map * sublayer_fraction)
+                        ] += sublayer_ng_map * sublayer_fraction
 
                         # Randomised Depth Cube
                         # randomised_depth[sublayer_ii, sublayer_jj, sublayer_depth_map_int] += \
@@ -477,7 +474,7 @@ class Faults(Horizons, Geomodel):
                         ] = facies[i]
                         work_cube_sealed[
                             sublayer_ii, sublayer_jj, sublayer_depth_map_int
-                        ] = (1 - facies[i - 1])
+                        ] = 1 - facies[i - 1]
 
                         work_cube_depth[
                             sublayer_ii, sublayer_jj, sublayer_depth_map_int
@@ -504,10 +501,10 @@ class Faults(Horizons, Geomodel):
 
         if self.cfg.include_salt:
             # Update age model after horizons have been modified by salt inclusion
-            self.faulted_age_volume[
-                :
-            ] = self.create_geologic_age_3d_from_infilled_horizons(
-                self.faulted_depth_maps[:] * 10.0
+            self.faulted_age_volume[:] = (
+                self.create_geologic_age_3d_from_infilled_horizons(
+                    self.faulted_depth_maps[:] * 10.0
+                )
             )
             # Set lith code for salt
             work_cube_lith[self.salt_model.salt_segments[:] > 0.0] = 2.0
@@ -776,6 +773,7 @@ class Faults(Horizons, Geomodel):
         hockey_sticks : list
             List of hockey sticks
         """
+
         def apply_faulting(traces, stretch_times, verbose=False):
             """
             Apply Faulting
@@ -843,10 +841,9 @@ class Faults(Horizons, Geomodel):
         fault_voxel_count_list = []
         number_fault_intersections = 0
 
-        depth_maps_faulted_infilled = \
-            self.copy_and_divide_depth_maps_by_infill(
-                self.unfaulted_depth_maps[:]
-            )
+        depth_maps_faulted_infilled = self.copy_and_divide_depth_maps_by_infill(
+            self.unfaulted_depth_maps[:]
+        )
         depth_maps_gaps = self.copy_and_divide_depth_maps_by_infill(
             self.unfaulted_depth_maps[:]
         )
@@ -864,7 +861,7 @@ class Faults(Horizons, Geomodel):
             semi_axes = [
                 fp["a"][ifault],
                 fp["b"][ifault],
-                fp["c"][ifault] / self.cfg.infill_factor ** 2,
+                fp["c"][ifault] / self.cfg.infill_factor**2,
             ]
             origin = [
                 fp["x0"][ifault],
@@ -1063,9 +1060,7 @@ class Faults(Horizons, Geomodel):
 
             print("   ... interpolation = " + str(interpolation))
 
-            if (
-                interpolation
-            ):  # i.e. if the fault should be considered, apply the displacements and append fault plane
+            if interpolation:  # i.e. if the fault should be considered, apply the displacements and append fault plane
                 faulted_depths2 = np.zeros(
                     (ellipsoid.shape[0], ellipsoid.shape[1], ellipsoid.shape[2], 2),
                     "float",
@@ -1201,9 +1196,9 @@ class Faults(Horizons, Geomodel):
                                 ].size
                             )
                         )
-                    self.fault_plane_throw[
-                        fault_plane_displacement > 0.0
-                    ] = fault_plane_displacement[fault_plane_displacement > 0.0]
+                    self.fault_plane_throw[fault_plane_displacement > 0.0] = (
+                        fault_plane_displacement[fault_plane_displacement > 0.0]
+                    )
                     if verbose:
                         print(
                             "   ... self.fault_plane_throw[self.fault_plane_throw > 0.].size = "
@@ -1321,6 +1316,7 @@ class Faults(Horizons, Geomodel):
 
                 # TODO: remove this block after qc/tests complete
                 from datagenerator.util import import_matplotlib
+
                 plt = import_matplotlib()
 
                 plt.close(35)
@@ -1581,7 +1577,7 @@ class Faults(Horizons, Geomodel):
         self,
         unfaulted_geologic_age: np.ndarray,
         faulted_geologic_age: np.ndarray,
-        onlap_clips: np.ndarray
+        onlap_clips: np.ndarray,
     ):
         """
         Re-interpolates the depth maps using the faulted geologic age cube
@@ -1594,7 +1590,7 @@ class Faults(Horizons, Geomodel):
             The faulted geologic age cube
         onlap_clips : np.ndarray
             The onlap clips
-        
+
         Returns
         -------
         depth_maps : np.ndarray
@@ -1789,14 +1785,7 @@ class Faults(Horizons, Geomodel):
         return faulted_depth_map, depth_map_gaps_faulted
 
     def get_displacement_vector(
-        self,
-        semi_axes: tuple,
-        origin: tuple,
-        throw: float,
-        tilt,
-        wb,
-        index,
-        fp
+        self, semi_axes: tuple, origin: tuple, throw: float, tilt, wb, index, fp
     ):
         """
         Gets a displacement vector.
@@ -1811,7 +1800,7 @@ class Faults(Horizons, Geomodel):
             The throw of th fault to use.
         tilt : float
             The tilt of the fault.
-        
+
         Returns
         -------
         stretch_times : np.ndarray
@@ -1824,8 +1813,8 @@ class Faults(Horizons, Geomodel):
             The hockey stick.
         fault_segments : np.ndarray
 
-        ellipsoid : 
-        fp : 
+        ellipsoid :
+        fp :
         """
         a, b, c = semi_axes
         x0, y0, z0 = origin
@@ -1907,7 +1896,7 @@ class Faults(Horizons, Geomodel):
     def apply_xyz_displacement(self, traces) -> np.ndarray:
         """
         Applies XYZ Displacement.
-        
+
         Apply stretching and squeezing previously applied to the input cube
         vertically to give all depths the same number of extrema.
 
@@ -1964,9 +1953,7 @@ class Faults(Horizons, Geomodel):
         """
         return zmaps / self.cfg.infill_factor
 
-    def rotate_3d_ellipsoid(
-        self, x0, y0, z0, a, b, c, fraction
-    ) -> np.ndarray:
+    def rotate_3d_ellipsoid(self, x0, y0, z0, a, b, c, fraction) -> np.ndarray:
         """
         Rotate a 3D ellipsoid
         ---------------------
@@ -1988,6 +1975,7 @@ class Faults(Horizons, Geomodel):
         fraction : _type_
             _description_
         """
+
         def f(x1, y1, z1, x_0, y_0, z_0, a1, b1, c1):
             return (
                 ((x1 - x_0) ** 2) / a1 + ((y1 - y_0) ** 2) / b1 + ((z1 - z_0) ** 2) / c1
@@ -2239,7 +2227,9 @@ class Faults(Horizons, Geomodel):
         # Max throw == 16000
         scale_factor = 16000 / fault_length[-1]
         # Coef random selection moved to top of function
-        variance_x = scale_factor * fault_length[np.where(throw_range == int(throw))].item()
+        variance_x = (
+            scale_factor * fault_length[np.where(throw_range == int(throw))].item()
+        )
         variance_y = variance_x * coef
         # Do the same for the drag zone area
         fault_length_drag = fault_length / 10000
@@ -2471,7 +2461,7 @@ class Faults(Horizons, Geomodel):
             _description_
         alpha : _type_
             _description_
-        
+
         Returns
         -------
         None
@@ -2611,16 +2601,16 @@ class Faults(Horizons, Geomodel):
                         channel_segments[
                             np.logical_and(layers_mask == 1, levee == 1)
                         ] = channel_facies_code
-                        faulted_age[
-                            np.logical_and(layers_mask == 1, levee == 1)
-                        ] = channel_facies_code
+                        faulted_age[np.logical_and(layers_mask == 1, levee == 1)] = (
+                            channel_facies_code
+                        )
                     elif j == 4000:
                         channel_segments[
                             np.logical_and(layers_mask == 1, crevasse == 1)
                         ] = channel_facies_code
-                        faulted_age[
-                            np.logical_and(layers_mask == 1, crevasse == 1)
-                        ] = channel_facies_code
+                        faulted_age[np.logical_and(layers_mask == 1, crevasse == 1)] = (
+                            channel_facies_code
+                        )
         print(" ... finished Re-assign correct channel segments")
         return channel_segments, faulted_age
 
@@ -3206,7 +3196,7 @@ def find_zero_thickness_onlapping_layers(z, onlap_list):
             thickness = z[..., layer] - z[..., x - 1]
             zeros = np.where(thickness == 0.0)
             if zeros[0].size > 0:
-                onlap_zero_z[f"{layer},{x-1}"] = zeros
+                onlap_zero_z[f"{layer},{x - 1}"] = zeros
     return onlap_zero_z
 
 
@@ -3232,8 +3222,7 @@ def fix_zero_thickness_fan_layers(z, layer_number, thickness):
 
 
 def fix_zero_thickness_onlap_layers(
-    faulted_depth_maps: np.ndarray,
-    onlap_dict: dict
+    faulted_depth_maps: np.ndarray, onlap_dict: dict
 ) -> np.ndarray:
     """fix_zero_thickness_onlap_layers _summary_
 

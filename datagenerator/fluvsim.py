@@ -22,16 +22,13 @@ plt = import_matplotlib()
 
 
 def create_fluvsim_params(
-    nx=100,
-    ny=100,
-    maxthickness=50,
-    work_folder="/scratch"
+    nx=100, ny=100, maxthickness=50, work_folder="/scratch"
 ) -> None:
     """
     Create Fluvsim parameter file
     -----------------------------
 
-    Create fluvsim.par parameter file with 
+    Create fluvsim.par parameter file with
     parameters for fluvsim simulation
 
     Parameters
@@ -44,7 +41,7 @@ def create_fluvsim_params(
         Maximum thickness, by default 50
     work_folder : str, optional
         Default work folder, by default "/scratch"
-    
+
     Returns
     -------
     None
@@ -319,7 +316,6 @@ def run_fluvsim(nx=100, ny=100, maxthickness=50, work_folder="/scratch", quiet=T
 
 
 if __name__ == "__main__":
-
     # nx=300
     # ny=300
     # maxthickness=800

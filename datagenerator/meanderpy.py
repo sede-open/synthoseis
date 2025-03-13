@@ -194,7 +194,7 @@ class ChannelBelt:
         t2,
         t3,
         aggr_factor,
-        *D
+        *D,
     ):
         """method for computing migration rates along channel centerlines and moving the centerlines accordingly
 
@@ -635,12 +635,12 @@ class ChannelBelt:
                             dx,
                         )
                         cutoff_dists = np.minimum(cutoff_dists, cutoff_dist)
-                    th_oxbows[
-                        cutoff_dists >= 0.9 * w / dx
-                    ] = 0  # set oxbow fill thickness to zero outside of oxbows
-                    th[
-                        cutoff_dists < 0.9 * w / dx
-                    ] = 0  # set point bar thickness to zero inside of oxbows
+                    th_oxbows[cutoff_dists >= 0.9 * w / dx] = (
+                        0  # set oxbow fill thickness to zero outside of oxbows
+                    )
+                    th[cutoff_dists < 0.9 * w / dx] = (
+                        0  # set point bar thickness to zero inside of oxbows
+                    )
                 else:  # no cutoffs
                     th_oxbows = np.zeros(np.shape(th))
                 th[th < 0] = 0  # eliminate negative th values
@@ -687,12 +687,12 @@ class ChannelBelt:
                             dx,
                         )
                         cutoff_dists = np.minimum(cutoff_dists, cutoff_dist)
-                    th_oxbows[
-                        cutoff_dists >= 0.9 * w / dx
-                    ] = 0  # set oxbow fill thickness to zero outside of oxbows
-                    th[
-                        cutoff_dists < 0.9 * w / dx
-                    ] = 0  # set point bar thickness to zero inside of oxbows
+                    th_oxbows[cutoff_dists >= 0.9 * w / dx] = (
+                        0  # set oxbow fill thickness to zero outside of oxbows
+                    )
+                    th[cutoff_dists < 0.9 * w / dx] = (
+                        0  # set point bar thickness to zero inside of oxbows
+                    )
                     # adding back sand near the channel axis (submarine only):
                     # th[cl_dist<0.5*w/dx] = bth*(1 - relief[cl_dist<0.5*w/dx]/dcr)
                 else:  # no cutoffs
@@ -912,7 +912,7 @@ def compute_derivatives(x, y, z):
     dx = np.gradient(x)  # first derivatives
     dy = np.gradient(y)
     dz = np.gradient(z)
-    ds = np.sqrt(dx ** 2 + dy ** 2 + dz ** 2)
+    ds = np.sqrt(dx**2 + dy**2 + dz**2)
     s = np.hstack((0, np.cumsum(ds[1:])))
     return dx, dy, dz, ds, s
 
@@ -930,7 +930,7 @@ def compute_curvature(x, y):
     dy = np.gradient(y)
     ddx = np.gradient(dx)  # second derivatives
     ddy = np.gradient(dy)
-    curvature = (dx * ddy - dy * ddx) / ((dx ** 2 + dy ** 2) ** 1.5)
+    curvature = (dx * ddy - dy * ddx) / ((dx**2 + dy**2) ** 1.5)
     return curvature
 
 
@@ -973,9 +973,9 @@ def find_cutoffs(x, y, crdist, deltas):
     diag_blank_width = int((crdist + 20 * deltas) / deltas)
     # distance matrix for centerline points:
     dist = distance.cdist(np.array([x, y]).T, np.array([x, y]).T)
-    dist[
-        dist > crdist
-    ] = np.NaN  # set all values that are larger than the cutoff threshold to NaN
+    dist[dist > crdist] = (
+        np.NaN
+    )  # set all values that are larger than the cutoff threshold to NaN
     # set matrix to NaN along the diagonal zone:
     for k in range(-diag_blank_width, diag_blank_width + 1):
         rows, cols = kth_diag_indices(dist, k)
@@ -1022,7 +1022,7 @@ def get_channel_banks(x, y, W):
     ns = len(x)
     dx = np.diff(x)
     dy = np.diff(y)
-    ds = np.sqrt(dx ** 2 + dy ** 2)
+    ds = np.sqrt(dx**2 + dy**2)
     x1[:-1] = x[:-1] + 0.5 * W * np.diff(y) / ds
     y1[:-1] = y[:-1] - 0.5 * W * np.diff(x) / ds
     x2[:-1] = x[:-1] - 0.5 * W * np.diff(y) / ds
@@ -1115,7 +1115,7 @@ def dist_map(x, y, z, xmin, xmax, ymin, ymax, dx, delta_s):
     dx, dy, dz, ds, s = compute_derivatives(x, y, z)
     dx_pix = np.diff(x_pix)
     dy_pix = np.diff(y_pix)
-    ds_pix = np.sqrt(dx_pix ** 2 + dy_pix ** 2)
+    ds_pix = np.sqrt(dx_pix**2 + dy_pix**2)
     s_pix = np.hstack((0, np.cumsum(ds_pix)))
     f = scipy.interpolate.interp1d(s, z)
     snew = s_pix * s[-1] / s_pix[-1]
@@ -1143,7 +1143,7 @@ def erosion_surface(h, w, cl_dist, z):
     returns:
     surf - map of the quadratic erosional surface (m)
     """
-    surf = z + (4 * h / w ** 2) * (cl_dist + w * 0.5) * (cl_dist - w * 0.5)
+    surf = z + (4 * h / w**2) * (cl_dist + w * 0.5) * (cl_dist - w * 0.5)
     return surf
 
 
@@ -1157,7 +1157,7 @@ def point_bar_surface(cl_dist, z, h, w):
     w - channel width, in pixels, as cl_dist is also given in pixels
     returns:
     pb - map of the Gaussian surface that can be used to from a point bar deposit (m)"""
-    pb = z - h * np.exp(-(cl_dist ** 2) / (2 * (w * 0.33) ** 2))
+    pb = z - h * np.exp(-(cl_dist**2) / (2 * (w * 0.33) ** 2))
     return pb
 
 
@@ -1196,9 +1196,7 @@ def mud_surface(h_mud, levee_width, cl_dist, w, z_map, topo):
     surf2 = (2 * h_mud / levee_width) * cl_dist + h_mud
     surf = np.minimum(surf1, surf2)
     # surface for 'eroding' the central part of the mud layer:
-    surf3 = h_mud + (4 * 1.5 * h_mud / w ** 2) * (cl_dist + w * 0.5) * (
-        cl_dist - w * 0.5
-    )
+    surf3 = h_mud + (4 * 1.5 * h_mud / w**2) * (cl_dist + w * 0.5) * (cl_dist - w * 0.5)
     surf = np.minimum(surf, surf3)
     surf[surf < 0] = 0
     # eliminate negative thicknesses

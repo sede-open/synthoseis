@@ -36,11 +36,11 @@ class Parameters(_Borg):
         additional model parameters are set.
     test_mode : int
         If test_mode is set using an integer, the size of the model will
-        be reduced e.g 100 makes a 100x100.It reduces the ammount of 
+        be reduced e.g 100 makes a 100x100.It reduces the ammount of
         time that the program takes to generate data usueful when testing
         a model.
 
-        **Warning: If you put too small a number, the model may fail due to 
+        **Warning: If you put too small a number, the model may fail due to
         not enough space to place faults etc...**
 
         Value should ideally be >= 50
@@ -48,7 +48,7 @@ class Parameters(_Borg):
         The string runid will be added to the final model directory.
     rpm_scaling_factors : dict
         These are user-defined parameter. You can use the defaults
-        provided, but results might be unrealistic. 
+        provided, but results might be unrealistic.
         These might need to be tuned to get reaslistic synthetic
         data.
     sqldict : dict
@@ -63,7 +63,7 @@ class Parameters(_Borg):
     make_directories() -> None:
         Method that generates all necessary directory structures on disk
     write_key_file():
-        Method to generate a key file that describes coordinate systems, 
+        Method to generate a key file that describes coordinate systems,
         track, bin, digi (inline, xlines, )
     write_to_logfile(msg, mainkey=None, subkey=None, val=""):
         Method that writes to the logfile
@@ -281,7 +281,7 @@ class Parameters(_Borg):
         String of the subkey to be written into de sql dictionary.
         val : `string`
         String of the value that should be written into the sql dictionary.
-        
+
         Returns
         -------
         None
@@ -304,7 +304,7 @@ class Parameters(_Borg):
         ----------
         logfile : `string`
         The path to the log file. By default None
-        
+
         Returns
         -------
         None
@@ -330,7 +330,7 @@ class Parameters(_Borg):
         Parameters
         ----------
         None
-        
+
         Returns
         -------
         None
@@ -393,7 +393,7 @@ class Parameters(_Borg):
         rpm_factors : `dict`
         Dictionary containing the scaling factors for the RPM.
         If no RPM factors are provided, the default values are used.
-        
+
         Returns
         -------
         None
@@ -437,7 +437,7 @@ class Parameters(_Borg):
         dname : `str`
         Directory name specified in the configuration file,
         or the default is used
-        
+
         Returns
         -------
         None
@@ -504,13 +504,13 @@ class Parameters(_Borg):
         ----------
         sn_db : `float`
             Value of the signal to noise value from the database
-        
+
         Returns
         -------
         pre_smear_snr : `float`
             Signal to noise ratio after the lateral filter is applied
         """
-        snr_of_lateral_filter = 10 * np.log10(self.lateral_filter_size ** 2)
+        snr_of_lateral_filter = 10 * np.log10(self.lateral_filter_size**2)
         pre_smear_snr = sn_db - snr_of_lateral_filter
         return pre_smear_snr
 
@@ -524,7 +524,7 @@ class Parameters(_Borg):
         Parameters
         ----------
         None
-        
+
         Returns
         -------
         None
@@ -603,7 +603,7 @@ class Parameters(_Borg):
         Parameters
         ----------
         None
-        
+
         Returns
         -------
         config : `dict`
@@ -628,7 +628,7 @@ class Parameters(_Borg):
         Parameters
         ----------
         None
-        
+
         Returns
         -------
         None
@@ -698,7 +698,7 @@ class Parameters(_Borg):
         The parameter that sets the size of the model in the x direction
         size_y : `int`
         The parameter that sets the size of the model in the y direction
-        
+
         Returns
         -------
         None
@@ -742,7 +742,7 @@ class Parameters(_Borg):
         Parameters
         ----------
         None
-        
+
         Returns
         -------
         None
@@ -752,9 +752,7 @@ class Parameters(_Borg):
         self.high_fault_throw = 35.0 * self.infill_factor
 
         # mode & clustering are randomly chosen
-        self.mode = np.random.choice([0, 1, 2], 1)[
-            0
-        ]
+        self.mode = np.random.choice([0, 1, 2], 1)[0]
         self.clustering = np.random.choice([0, 1, 2], 1)[0]
 
         if self.mode == 0:
@@ -768,31 +766,23 @@ class Parameters(_Borg):
             if self.clustering == 0:
                 self.fmode = "self_branching"
                 # Self Branching. avoid large fault
-                self.number_faults = np.random.randint(
-                    3, 9
-                )
+                self.number_faults = np.random.randint(3, 9)
                 self.low_fault_throw = 5.0 * self.infill_factor
                 self.high_fault_throw = 15.0 * self.infill_factor
             if self.clustering == 1:
                 # Stair case
                 self.fmode = "stair_case"
-                self.number_faults = np.random.randint(
-                    5, self.max_number_faults
-                )
+                self.number_faults = np.random.randint(5, self.max_number_faults)
             if self.clustering == 2:
                 # Relay ramps
                 self.fmode = "relay_ramp"
-                self.number_faults = np.random.randint(
-                    3, 9
-                )
+                self.number_faults = np.random.randint(3, 9)
                 self.low_fault_throw = 5.0 * self.infill_factor
                 self.high_fault_throw = 15.0 * self.infill_factor
         elif self.mode == 2:
             # Horst and graben
             self.fmode = "horst_and_graben"
-            self.number_faults = np.random.randint(
-                3, 7
-            )
+            self.number_faults = np.random.randint(3, 7)
 
         self.fault_param = [
             str(self.mode) + str(self.clustering),
@@ -813,7 +803,7 @@ class Parameters(_Borg):
         Parameters
         ----------
         None
-        
+
         Returns
         -------
         sha : `str`
@@ -841,7 +831,7 @@ class Parameters(_Borg):
         Parameters
         ----------
         None
-        
+
         Returns
         -------
         None
@@ -945,7 +935,7 @@ class Parameters(_Borg):
         Parameters
         ----------
         None
-        
+
         Returns
         -------
         fraction of the year : str
@@ -971,7 +961,7 @@ class Parameters(_Borg):
         ----------
         hdf_name : str
             The name of the HDF file to be created
-        
+
         Returns
         -------
         None
@@ -985,8 +975,9 @@ class Parameters(_Borg):
         self.h5file = tables.open_file(self.hdf_filename, "w")
         self.h5file.create_group("/", "ModelData")
 
-    def hdf_init(self, dset_name, shape: tuple, dtype: str = "float64") -> tables.CArray:
-        
+    def hdf_init(
+        self, dset_name, shape: tuple, dtype: str = "float64"
+    ) -> tables.CArray:
         """
         HDF Initialize
         ----------------------------------------
@@ -1000,7 +991,7 @@ class Parameters(_Borg):
             The name of the dataset to be created
         shape : tuple
 
-        
+
         Returns
         -------
         new_array: tables.CArray

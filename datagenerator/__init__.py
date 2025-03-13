@@ -1,4 +1,4 @@
 """
-    .. include:: ../README.md
-    __docformat__ = "numpy"
+.. include:: ../README.md
+__docformat__ = "numpy"
 """
