@@ -6,6 +6,7 @@ from scipy.interpolate import griddata
 from datagenerator.Parameters import Parameters
 from itertools import groupby
 
+
 class Horizons:
     def __init__(self, parameters):
         self.cfg = parameters
@@ -730,7 +731,6 @@ class Onlaps(Horizons):
         onlaps_horizon_list = []
         layer_has_onlaps = np.zeros((self.depth_maps.shape[2]), "bool")
         for i in range(self.depth_maps.shape[2] - 2, 0, -1):
-
             if self.onlaps[i] == 1:
                 # A tilting (onlap) episode occurs for this horizon.
                 # Add a random dipping layer to this and all shallower layers, and adjust depth for layer thickness
@@ -1449,30 +1449,30 @@ class MarkovChainFacies:
 
 def build_unfaulted_depth_maps(parameters: Parameters):
     """
-        Build Unfaulted Depth Maps
-        --------------------------
-        Generates unfaulted depth maps.
+    Build Unfaulted Depth Maps
+    --------------------------
+    Generates unfaulted depth maps.
 
-        1. Build stack of horizons.
-        2. Generate a random stack of horizons.
-        3. Optionally insert basin floor fans
-        4. Insert onlap episodes
+    1. Build stack of horizons.
+    2. Generate a random stack of horizons.
+    3. Optionally insert basin floor fans
+    4. Insert onlap episodes
 
-        Parameters
-        ----------
-        parameters : str
-            The key desired to be accessed
+    Parameters
+    ----------
+    parameters : str
+        The key desired to be accessed
 
-        Returns
-        -------
-        depth_maps : np.array
-            The generated depth maps
-        onlap_horizon_list : list
-            Onlapping Horizon list
-        fan_list : np.array | None
-            List of generated fans
-        fan_thicknesses : np.array | None
-            Generated fan thicknesses
+    Returns
+    -------
+    depth_maps : np.array
+        The generated depth maps
+    onlap_horizon_list : list
+        Onlapping Horizon list
+    fan_list : np.array | None
+        List of generated fans
+    fan_thicknesses : np.array | None
+        Generated fan thicknesses
     """
     horizons = RandomHorizonStack(parameters)
     horizons.create_depth_maps()
@@ -1501,28 +1501,28 @@ def create_facies_array(
     parameters: Parameters,
     depth_maps: np.ndarray,
     onlap_horizons: list,
-    fan_horizons: np.ndarray = None
+    fan_horizons: np.ndarray = None,
 ) -> np.ndarray:
     """
-        Create Facies Array
-        --------------------------
-        Generates facies for the model and return an array with the facies.
+    Create Facies Array
+    --------------------------
+    Generates facies for the model and return an array with the facies.
 
-        Parameters
-        ----------
-        parameters : datagenerator.Parameters
-            Parameter object storing all model parameters.
-        depth_maps : np.ndarray
-            A numpy array containing the depth maps.
-        onlap_horizons : list
-            A list of the onlap horizons.
-        fan_horizons : np.ndarray
-            The fan horizons.
+    Parameters
+    ----------
+    parameters : datagenerator.Parameters
+        Parameter object storing all model parameters.
+    depth_maps : np.ndarray
+        A numpy array containing the depth maps.
+    onlap_horizons : list
+        A list of the onlap horizons.
+    fan_horizons : np.ndarray
+        The fan horizons.
 
-        Returns
-        -------
-        facies : np.ndarray
-            An array that contains the facies for the model.
+    Returns
+    -------
+    facies : np.ndarray
+        An array that contains the facies for the model.
     """
     facies = Facies(parameters, depth_maps.shape[-1], onlap_horizons, fan_horizons)
     # facies.sand_shale_facies_binomial_dist()

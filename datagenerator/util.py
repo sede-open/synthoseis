@@ -35,7 +35,7 @@ def find_line_with_most_voxels(volume, voxel_thresholds, cfg):
         voxels = volume[ii, ...].copy()
         try:  # if two values provided...
             voxels = np.where(
-                ((voxels >= voxel_thresholds[0] & voxels < voxel_thresholds[1])),
+                (voxels >= voxel_thresholds[0] & voxels < voxel_thresholds[1]),
                 1.0,
                 0.0,
             )
@@ -49,34 +49,30 @@ def find_line_with_most_voxels(volume, voxel_thresholds, cfg):
 
 
 def plot_voxels_not_in_regular_layers(
-    volume: np.ndarray,
-    threshold: float,
-    title: str,
-    png_name: str,
-    cfg
+    volume: np.ndarray, threshold: float, title: str, png_name: str, cfg
 ) -> None:
     """
-        Plot voxels not in regular layers
+    Plot voxels not in regular layers
 
-        Analyze voxel values not in regular layers by plotting a
-        histogram of voxels above a given threshold.
+    Analyze voxel values not in regular layers by plotting a
+    histogram of voxels above a given threshold.
 
-        Parameters
-        ----------
-        volume : np.ndarray
-            3D volume (ndarray)
-        threshold : float
-            Threshold for voxel values.
-        title : str
-            Title for plot.
-        png_name : str
-            Name of png file to save.
-        cfg : dict
-            Model configurations.
+    Parameters
+    ----------
+    volume : np.ndarray
+        3D volume (ndarray)
+    threshold : float
+        Threshold for voxel values.
+    title : str
+        Title for plot.
+    png_name : str
+        Name of png file to save.
+    cfg : dict
+        Model configurations.
 
-        Returns
-        -------
-        None
+    Returns
+    -------
+    None
     """
     plt = import_matplotlib()
     voxels = volume[volume > threshold]
@@ -108,7 +104,7 @@ def plot_xsection(volume, maps, line_num, title, png_name, cfg, cmap="prism") ->
         _description_
     cmap : str, optional
         _description_, by default "prism"
-    
+
     Returns
     -------
     None
@@ -160,7 +156,7 @@ def plot_3D_faults_plot(cfg, faults, plot_faults=True, plot_throws=True) -> None
         Whether to plot the faults or not, by default True
     plot_throws : bool, optional
         Whether to plot the fault throws or not, by default True
-    
+
     Returns
     -------
     None
@@ -325,7 +321,9 @@ def plot_3D_faults_plot(cfg, faults, plot_faults=True, plot_throws=True) -> None
         )
 
 
-def plot_3D_closure_plot(cfg, closures, plot_closures=True, plot_strat_closures=True) -> None:
+def plot_3D_closure_plot(
+    cfg, closures, plot_closures=True, plot_strat_closures=True
+) -> None:
     """
     Plot 3D closures
     ----------------
@@ -342,7 +340,7 @@ def plot_3D_closure_plot(cfg, closures, plot_closures=True, plot_strat_closures=
         Whether to plot the closures or not, by default True
     plot_strat_closures : bool, optional
         Whether to plot statigraphic closures or not, by default True
-    
+
     Returns
     -------
     None
@@ -608,7 +606,7 @@ def plot_facies_qc(cfg, lith, seismic, facies, maps) -> None:
         The facies model.
     maps : dict
         The maps used in the model.
-    
+
     Returns
     -------
     None
@@ -625,7 +623,7 @@ def plot_facies_qc(cfg, lith, seismic, facies, maps) -> None:
     textstr = "\n".join(
         (
             f"Sand % Input: {cfg.sand_layer_pct:.1%}",
-            f"Sand % Actual: {facies[facies == 1.].size / facies.size:.1%}",
+            f"Sand % Actual: {facies[facies == 1.0].size / facies.size:.1%}",
             f"Sand thickness (layers) Input: {cfg.sand_layer_thickness}",
             f"Sand thickness (layers) Actual: {avg_sand_unit_thickness:.1f}",
             f"Sand Voxel % in model: {lith[lith[:] == 1].size / lith[lith[:] >= 0].size:.1%}",
@@ -668,7 +666,9 @@ def plot_facies_qc(cfg, lith, seismic, facies, maps) -> None:
     for i in range(maps.shape[-1]):
         axs[0].plot(range(cfg.cube_shape[0]), maps[iline, :, i], "k-", lw=0.3)
 
-    fig.savefig(os.path.join(cfg.work_subfolder, "QC_plot__Facies_FullStackCumulativeSum.png"))
+    fig.savefig(
+        os.path.join(cfg.work_subfolder, "QC_plot__Facies_FullStackCumulativeSum.png")
+    )
     plt.close()
 
 
@@ -860,7 +860,7 @@ def check_resident_memory():
         i = v.index("VmRSS:")
         v = v[i:].split(None, 3)
 
-        return (float(v[1]) * _scale[v[2]]) / 1024 ** 3
+        return (float(v[1]) * _scale[v[2]]) / 1024**3
     else:
         return 0.0
 
@@ -935,7 +935,6 @@ def qc_folders(directory):
 
 
 def hanflat(inarray, pctflat):
-
     # ***************************************************************************************
     #
     #   Function applies a Hanning taper to ends of "inarray".
@@ -980,14 +979,7 @@ def hanflat3d(inarray3d, pctflat):
 
 
 def create_3D_qc_plot(
-    cfg,
-    seismic,
-    brine,
-    oil,
-    gas,
-    fault_segments,
-    title_text,
-    camera_steps=20
+    cfg, seismic, brine, oil, gas, fault_segments, title_text, camera_steps=20
 ) -> None:
     """
     Creates a 3D QC plot

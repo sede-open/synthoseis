@@ -1,4 +1,5 @@
 """Generate wavelets from filters derived from real data"""
+
 import numpy as np
 from scipy.fftpack import fft, fftfreq, ifft
 from scipy.interpolate import UnivariateSpline
@@ -90,7 +91,7 @@ def ricker(f, dt, convolutions=2):
     halfsmp = int(lenhalf / dt) + 1
     lenhalf = halfsmp * dt
     t = np.arange(-lenhalf, lenhalf + dt, dt) / 1000.0
-    s = (1 - 2 * np.pi ** 2 * f ** 2 * t ** 2) * np.exp(-(np.pi ** 2) * f ** 2 * t ** 2)
+    s = (1 - 2 * np.pi**2 * f**2 * t**2) * np.exp(-(np.pi**2) * f**2 * t**2)
     t *= 1000.0
     for _ in range(convolutions - 1):
         s = np.convolve(s, s, mode="full")
@@ -144,7 +145,7 @@ def generate_wavelet(fs, pcts, digi=4.0, convolutions=4, verbose=False):
 
     # set up default fft
     s, freq = default_fft(digi=digi, convolutions=convolutions)
-    s /= np.sum(np.sqrt(s ** 2))  # normalize
+    s /= np.sum(np.sqrt(s**2))  # normalize
     ampli_spectrum = abs(fft(s))
     ampli_spectrum = fft(s)
     freq = np.roll(freq, freq.shape[0] // 2)

@@ -226,9 +226,9 @@ class Closures(Horizons, Geomodel, Parameters):
                 # - assumes that fault intersections are inserted in input map with value of 0.
                 # - assumes that input map values represent depth (i.e., bigger values are deeper)
                 top_structure_depth_map = depth_maps[:, :, ihorizon].copy()
-                top_structure_depth_map[
-                    np.isnan(top_structure_depth_map)
-                ] = 0.0  # replace nans with 0.
+                top_structure_depth_map[np.isnan(top_structure_depth_map)] = (
+                    0.0  # replace nans with 0.
+                )
                 top_structure_depth_map /= float(self.cfg.digi)
                 if self.cfg.partial_voxels:
                     top_structure_depth_map -= (
@@ -237,9 +237,9 @@ class Closures(Horizons, Geomodel, Parameters):
                 base_structure_depth_map = depth_maps_infilled[
                     :, :, ihorizon + 1
                 ].copy()
-                base_structure_depth_map[
-                    np.isnan(top_structure_depth_map)
-                ] = 0.0  # replace nans with 0.
+                base_structure_depth_map[np.isnan(top_structure_depth_map)] = (
+                    0.0  # replace nans with 0.
+                )
                 base_structure_depth_map /= float(self.cfg.digi)
                 print(
                     " ...inside create_closure_labels_from_depth_maps... ihorizon, self.top_lith_facies[ihorizon] = ",
@@ -277,9 +277,9 @@ class Closures(Horizons, Geomodel, Parameters):
                     closure_depth_map[closure_depth_map == 1] = top_structure_depth_map[
                         closure_depth_map == 1
                     ]
-                    closure_depth_map[
-                        closure_depth_map == 1e5
-                    ] = top_structure_depth_map[closure_depth_map == 1e5]
+                    closure_depth_map[closure_depth_map == 1e5] = (
+                        top_structure_depth_map[closure_depth_map == 1e5]
+                    )
                     # Select the maximum value between the top sand map and the flood-filled closure map
                     closure_depth_map = np.max(
                         np.dstack((closure_depth_map, top_structure_depth_map)), axis=-1
@@ -548,16 +548,16 @@ class Closures(Horizons, Geomodel, Parameters):
             # - assumes that fault intersections are inserted in input map with value of 0.
             # - assumes that input map values represent depth (i.e., bigger values are deeper)
             top_structure_depth_map = depth_maps[:, :, ihorizon].copy()
-            top_structure_depth_map[
-                np.isnan(top_structure_depth_map)
-            ] = 0.0  # replace nans with 0.
+            top_structure_depth_map[np.isnan(top_structure_depth_map)] = (
+                0.0  # replace nans with 0.
+            )
             top_structure_depth_map /= float(self.cfg.digi)
             if self.cfg.partial_voxels:
                 top_structure_depth_map -= 1.0  # account for voxels partially in layer
             base_structure_depth_map = depth_maps_infilled[:, :, ihorizon + 1].copy()
-            base_structure_depth_map[
-                np.isnan(top_structure_depth_map)
-            ] = 0.0  # replace nans with 0.
+            base_structure_depth_map[np.isnan(top_structure_depth_map)] = (
+                0.0  # replace nans with 0.
+            )
             base_structure_depth_map /= float(self.cfg.digi)
             print(
                 " ...inside create_closure_labels_from_depth_maps... ihorizon = ",
@@ -1505,7 +1505,7 @@ class Closures(Horizons, Geomodel, Parameters):
             )
 
         print(
-            f'{72 * "*"}\n\tNum Closures: {len(label_counts) - 1}\n\tVoxel counts\n{label_counts[1:]}\n{72 * "*"}'
+            f"{72 * '*'}\n\tNum Closures: {len(label_counts) - 1}\n\tVoxel counts\n{label_counts[1:]}\n{72 * '*'}"
         )
         for vox_count in label_counts:
             if vox_count < self.cfg.closure_min_voxels:
@@ -1622,7 +1622,7 @@ class Closures(Horizons, Geomodel, Parameters):
         brine_closures = self.populate_closure_dict(b, "brine", seismic_nmf)
         all_closures = oil_closures + gas_closures + brine_closures
         for i, c in enumerate(all_closures):
-            self.cfg.sqldict[f"closure_{i+1}"] = c
+            self.cfg.sqldict[f"closure_{i + 1}"] = c
         num_labels = np.max(o) + np.max(g)
         self.cfg.write_to_logfile(
             msg=None,
@@ -1694,8 +1694,7 @@ class Closures(Horizons, Geomodel, Parameters):
         msg = f"layers for closure computation: {str(self.top_lith_indices)}\n"
         msg += f"Number of HC Closures : {num_labels}\n"
         msg += (
-            f"Closure voxel count: {closure_voxel_count} - "
-            f"{closure_voxel_pct:5.2%}\n"
+            f"Closure voxel count: {closure_voxel_count} - {closure_voxel_pct:5.2%}\n"
         )
         msg += (
             f"Closure voxel count: (brine) {_brine_voxels} - {_brine_voxels_pct:5.2%}\n"
@@ -2289,7 +2288,7 @@ class Closures(Horizons, Geomodel, Parameters):
                     labels_clean[labels_clean == i] = -i
                     msg_postscript = " NOT converged"
                 msg = (
-                    f"closure_id: {int(i):04d}, fault_id: {int(j + .5):04d}, "
+                    f"closure_id: {int(i):04d}, fault_id: {int(j + 0.5):04d}, "
                     + f"original_voxels: {original_voxels:11.0f}, new_n_voxel: {new_n_voxel:11.0f}, "
                     + f"percent_growth: {float(new_n_voxel / original_voxels):6.2f}"
                 )
@@ -3247,9 +3246,9 @@ def _flood_fill(horizon, max_column_height=20.0, verbose=False, debug=False):
     temp_event[-3:, :] = 0.0
 
     # replace pixels with value=0 with vertical 'wall' that is max_column_height deeper than nearby pixels
-    temp_event[
-        np.logical_and(emptypicks_dilated == 2.0, temp_event != 0.0)
-    ] += max_column_height
+    temp_event[np.logical_and(emptypicks_dilated == 2.0, temp_event != 0.0)] += (
+        max_column_height
+    )
     temp_event[emptypicks == 1.0] += 0.0
 
     # put deep point at map origin to 'collect' flood-fill run-off
@@ -3354,8 +3353,8 @@ def lsq(x, y, axis=-1):
     # compute pearsonr
     r = np.sum(x * y, axis=axis) - np.sum(x) * np.sum(y, axis=axis) / y.shape[axis]
     r /= np.sqrt(
-        (np.sum(x ** 2, axis=axis) - np.sum(x, axis=axis) ** 2 / y.shape[axis])
-        * (np.sum(y ** 2, axis=axis) - np.sum(y, axis=axis) ** 2 / y.shape[axis])
+        (np.sum(x**2, axis=axis) - np.sum(x, axis=axis) ** 2 / y.shape[axis])
+        * (np.sum(y**2, axis=axis) - np.sum(y, axis=axis) ** 2 / y.shape[axis])
     )
 
     # compute slope

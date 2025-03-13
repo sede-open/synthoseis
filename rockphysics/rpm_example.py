@@ -33,51 +33,51 @@ class RPMExample:
 
     @staticmethod
     def calc_shale_rho(z):
-        return 7.7e-12 * z ** 3 + -8.8e-08 * z ** 2 + 0.0004 * z + 1.957
+        return 7.7e-12 * z**3 + -8.8e-08 * z**2 + 0.0004 * z + 1.957
 
     @staticmethod
     def calc_shale_vp(z):
-        return -0.00013 * z ** 2 + 1.13 * z + 1580
+        return -0.00013 * z**2 + 1.13 * z + 1580
 
     @staticmethod
     def calc_shale_vs(z):
-        return -0.0001 * z ** 2 + 0.96 * z + 279
+        return -0.0001 * z**2 + 0.96 * z + 279
 
     @staticmethod
     def calc_brine_sand_rho(z):
-        return -7.8e-09 * z ** 2 + 0.00012 * z + 2.021
+        return -7.8e-09 * z**2 + 0.00012 * z + 2.021
 
     @staticmethod
     def calc_brine_sand_vp(z):
-        return -1.34e-05 * z ** 2 + 0.49 * z + 2317
+        return -1.34e-05 * z**2 + 0.49 * z + 2317
 
     @staticmethod
     def calc_brine_sand_vs(z):
-        return -1.0785e-05 * z ** 2 + 0.391 * z + 1007
+        return -1.0785e-05 * z**2 + 0.391 * z + 1007
 
     @staticmethod
     def calc_oil_sand_rho(z):
-        return -9.23e-09 * z ** 2 + 0.00014 * z + 1.916
+        return -9.23e-09 * z**2 + 0.00014 * z + 1.916
 
     @staticmethod
     def calc_oil_sand_vp(z):
-        return -8.876e-06 * z ** 2 + 0.505 * z + 1998
+        return -8.876e-06 * z**2 + 0.505 * z + 1998
 
     @staticmethod
     def calc_oil_sand_vs(z):
-        return -1.126e-05 * z ** 2 + 0.391 * z + 1036
+        return -1.126e-05 * z**2 + 0.391 * z + 1036
 
     @staticmethod
     def calc_gas_sand_rho(z):
-        return -1.818e-08 * z ** 2 + 0.000247 * z + 1.612
+        return -1.818e-08 * z**2 + 0.000247 * z + 1.612
 
     @staticmethod
     def calc_gas_sand_vp(z):
-        return -3.216e-06 * z ** 2 + 0.4796 * z + 1996
+        return -3.216e-06 * z**2 + 0.4796 * z + 1996
 
     @staticmethod
     def calc_gas_sand_vs(z):
-        return -1.0687e-05 * z ** 2 + 0.3662 * z + 1135
+        return -1.0687e-05 * z**2 + 0.3662 * z + 1135
 
     def calc_shale_properties(self, z_rho, z_vp, z_vs):
         rho = self.calc_shale_rho(z_rho)

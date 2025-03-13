@@ -7,33 +7,34 @@ from scipy.ndimage import maximum_filter
 
 class Geomodel:
     """
-        Geomodel
-        --------------------------
-        The class of the Geomodel object.
+    Geomodel
+    --------------------------
+    The class of the Geomodel object.
 
-        This class contains all the items that make up the Geologic model.
+    This class contains all the items that make up the Geologic model.
 
-        Parameters
-        ----------
-        parameters : datagenerator.Parameters
-            Parameter object storing all model parameters.
-        depth_maps : np.ndarray
-            A numpy array containing the depth maps.
-        onlap_horizon_list : list
-            A list of the onlap horizons.
-        facies : np.ndarray
-            The generated facies.
+    Parameters
+    ----------
+    parameters : datagenerator.Parameters
+        Parameter object storing all model parameters.
+    depth_maps : np.ndarray
+        A numpy array containing the depth maps.
+    onlap_horizon_list : list
+        A list of the onlap horizons.
+    facies : np.ndarray
+        The generated facies.
 
-        Returns
-        -------
-        None
+    Returns
+    -------
+    None
     """
+
     def __init__(
         self,
         parameters: Parameters,
         depth_maps: np.ndarray,
         onlap_horizon_list: list,
-        facies: np.ndarray
+        facies: np.ndarray,
     ) -> None:
         """__init__
 
@@ -85,28 +86,28 @@ class Geomodel:
 
     def build_unfaulted_geomodels(self):
         """
-            Build unfaulted geomodels.
-            --------------------------
-            A method that builds unfaulted geomodels.
+        Build unfaulted geomodels.
+        --------------------------
+        A method that builds unfaulted geomodels.
 
-            This method does the following:
+        This method does the following:
 
-            * Build geologic age cube from depth horizons
-            * Build onlap segmentation cube
-            * If channels are turned on, use fluvsim fortran code to build:
-            - floodplain shale cube
-            - channel fill cube
-            - shale channel drape
-            - levee cube
-            - crevasse cube
+        * Build geologic age cube from depth horizons
+        * Build onlap segmentation cube
+        * If channels are turned on, use fluvsim fortran code to build:
+        - floodplain shale cube
+        - channel fill cube
+        - shale channel drape
+        - levee cube
+        - crevasse cube
 
-            Parameters
-            ----------
-            None
+        Parameters
+        ----------
+        None
 
-            Returns
-            -------
-            None
+        Returns
+        -------
+        None
         """
         self.geologic_age[:] = self.create_geologic_age_3d_from_infilled_horizons(
             self.depth_maps
@@ -130,18 +131,18 @@ class Geomodel:
 
     def build_meshgrid(self):
         """
-            Build Meshgrid
-            --------------------------
-            Creates a meshgrid using the data in the Geomodel.
+        Build Meshgrid
+        --------------------------
+        Creates a meshgrid using the data in the Geomodel.
 
-            Parameters
-            ----------
-            None
+        Parameters
+        ----------
+        None
 
-            Returns
-            -------
-            meshgrid : np.darray
-                A meshgrid of the data in the Geomodel.
+        Returns
+        -------
+        meshgrid : np.darray
+            A meshgrid of the data in the Geomodel.
         """
         return np.meshgrid(
             range(self.cfg.cube_shape[0]),
@@ -152,24 +153,24 @@ class Geomodel:
 
     def create_geologic_age_3d_from_infilled_horizons(self, depth_maps, verbose=False):
         """
-            Create geologic age 3d model from infilled horizons.
-            --------------------------
-            Creates cube containing a geologic age model from a horizon stack.
+        Create geologic age 3d model from infilled horizons.
+        --------------------------
+        Creates cube containing a geologic age model from a horizon stack.
 
-            - depth_maps have units like ft or ms
-            - geologic age has arbitrary units where 'age' is same as horizon index
+        - depth_maps have units like ft or ms
+        - geologic age has arbitrary units where 'age' is same as horizon index
 
-            Parameters
-            ----------
-            depth_maps : np.ndarray
-                THe depth maps to use to generate the geologic age model.
-            verbose : bool
-                The level of verbosity in the logs
+        Parameters
+        ----------
+        depth_maps : np.ndarray
+            THe depth maps to use to generate the geologic age model.
+        verbose : bool
+            The level of verbosity in the logs
 
-            Returns
-            -------
-            returns : age : np.ndarray
-                The geologic age model.
+        Returns
+        -------
+        returns : age : np.ndarray
+            The geologic age model.
         """
         if self.cfg.verbose:
             print("\nCreating Geologic Age volume from unfaulted depth maps")
@@ -240,18 +241,18 @@ class Geomodel:
 
     def vertical_anti_alias_filter_simple(self, cube) -> np.ndarray:
         """
-            Simple vertical anti alias filter
-            --------------------------
-            Applies a simple version of the vertical anti-alias filter.
+        Simple vertical anti alias filter
+        --------------------------
+        Applies a simple version of the vertical anti-alias filter.
 
-            Parameters
-            ----------
-            cube : np.ndarray
-                The cube to apply the filter to.
-            Returns
-            -------
-            filtered_cube : np.ndarray
-                The anti-aliased filtered cube.
+        Parameters
+        ----------
+        cube : np.ndarray
+            The cube to apply the filter to.
+        Returns
+        -------
+        filtered_cube : np.ndarray
+            The anti-aliased filtered cube.
         """
         if self.cfg.verbose:
             print("Applying simple vertical anti-alias filter")
@@ -260,18 +261,18 @@ class Geomodel:
 
     def vertical_anti_alias_filter(self, cube):
         """
-            Vertical anti alias filter
-            --------------------------
-            Applies a vertical anti-alias filter.
+        Vertical anti alias filter
+        --------------------------
+        Applies a vertical anti-alias filter.
 
-            Parameters
-            ----------
-            cube : np.ndarray
-                The cube to apply the filter to.
-            Returns
-            -------
-            filtered_cube : np.ndarray
-                The anti-aliased filtered cube.
+        Parameters
+        ----------
+        cube : np.ndarray
+            The cube to apply the filter to.
+        Returns
+        -------
+        filtered_cube : np.ndarray
+            The anti-aliased filtered cube.
         """
         infill_factor_o2_odd = next_odd(int(self.cfg.infill_factor + 1) / 2)
         max_filt = maximum_filter(cube, size=(1, 1, infill_factor_o2_odd + 2))
@@ -408,7 +409,6 @@ class Geomodel:
 
         voxel_count = 0
         for ihorizon in sorted_onlaps_horizon_list:
-
             # insert onlap label in voxels around horizon
             shallow_map = self.depth_maps[:, :, ihorizon].copy()
             shallow_depth_map_integer = (shallow_map + 0.5).astype("int")
@@ -417,7 +417,6 @@ class Geomodel:
                 -int(self.cfg.infill_factor * 1.5),
                 int(self.cfg.infill_factor * 1.5) + 1,
             ):
-
                 sublayer_ii = ii
                 sublayer_jj = jj
                 sublayer_depth_map = k + shallow_depth_map_integer
