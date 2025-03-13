@@ -134,7 +134,7 @@ def plot_xsection(volume, maps, line_num, title, png_name, cfg, cmap="prism") ->
     plt.colorbar()
     plt.ylim((volume.shape[-1], 0))
     for i in range(0, maps.shape[-1], 1):
-        plt.plot(range(cfg.cube_shape[0]), maps[line_num, :, i], "k-", lw=0.3)
+        plt.plot(range(cfg.cube_shape[1]), maps[line_num, :, i], "k-", lw=0.3)
     plt.savefig(os.path.join(cfg.work_subfolder, png_name), format="png")
     plt.close(1)
 

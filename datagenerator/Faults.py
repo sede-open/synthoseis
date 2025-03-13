@@ -2487,6 +2487,11 @@ class Faults(Horizons, Geomodel):
         # Plot 3D XY displacement
         ax1.axis("off")
         ax1 = fig.add_subplot(222, projection="3d")
+        # If cube is not square in i, j, this plot will fail. Ensure x, y and xy_dis_norm have same shape
+        x, y = np.meshgrid(
+            np.linspace(0, 1, xy_dis_norm.shape[1]),
+            np.linspace(0, 1, xy_dis_norm.shape[0]),
+        )
         ax1.plot_surface(x, y, xy_dis_norm, cmap="Spectral", linewidth=0)
         ax1.set_xlabel("X axis")
         ax1.set_ylabel("Y axis")
