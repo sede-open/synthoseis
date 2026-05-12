@@ -36,8 +36,15 @@
   "basin_floor_fans": false,
   "include_channels": false,
   "include_salt": true,
-  "write_to_hdf": false,
   "broadband_qc_volume": false,
   "model_qc_volumes": true,
-  "multiprocess_bp": true
+  "model_store_in_memory": false,
+  "cleanup_intermediates": true,
+  "sand_on_sand_closures": true,
+  "angle_gathers": {
+    "enabled": false,
+    "angle_min": 5,
+    "angle_max": 45,
+    "angle_step": 2
+  }
 }

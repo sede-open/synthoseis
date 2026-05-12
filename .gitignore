@@ -12,3 +12,11 @@ tags
 /multvt2vds.freq.log
 wip*
 *.code-workspace
+
+# Agentic Foundry / tooling — never commit these
+.agentic-docs/
+.worktrees/
+.venv/
+uv.lock
+poetry.lock
+environment.yml

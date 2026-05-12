@@ -1,13 +1,16 @@
 import os
 import itertools
-from multiprocessing import Pool
+from concurrent.futures import ThreadPoolExecutor
 import numpy as np
+from numpy.random import default_rng
 
 from tqdm import trange
 from datagenerator.histogram_equalizer import normalize_seismic
 from datagenerator.Geomodels import Geomodel
-from datagenerator.util import write_data_to_hdf
+from datagenerator.output_writer import write_volume_to_zarr
+from datagenerator.util import plot_3D_faults_plot
 from datagenerator.wavelets import generate_wavelet, plot_wavelets
+from datagenerator.zoeppritz_kernel import compute_rfc_volumes as _numba_compute_rfc
 from rockphysics.RockPropertyModels import select_rpm, RockProperties, EndMemberMixing
 
 
@@ -42,6 +45,7 @@ class SeismicVolume(Geomodel):
         self.cfg = parameters
         self.faults = faults
         self.traps = closures
+        self.rng = default_rng(parameters.noise_ss.spawn(1)[0])
 
         if self.cfg.model_qc_volumes:
             # Add 0 and 45 degree angles to the list of user-input angles
@@ -53,32 +57,32 @@ class SeismicVolume(Geomodel):
 
         self.first_random_lyr = 20  # do not randomise shallow layers
 
-        self.rho = self.cfg.hdf_init(
-            "rho", shape=self.cfg.h5file.root.ModelData.faulted_depth.shape
+        self.rho = self.cfg.create_array(
+            "rho", shape=self.cfg.model_store["faulted_depth"].shape
         )
-        self.vp = self.cfg.hdf_init(
-            "vp", shape=self.cfg.h5file.root.ModelData.faulted_depth.shape
+        self.vp = self.cfg.create_array(
+            "vp", shape=self.cfg.model_store["faulted_depth"].shape
         )
-        self.vs = self.cfg.hdf_init(
-            "vs", shape=self.cfg.h5file.root.ModelData.faulted_depth.shape
+        self.vs = self.cfg.create_array(
+            "vs", shape=self.cfg.model_store["faulted_depth"].shape
         )
-        self.rho_ff = self.cfg.hdf_init(
-            "rho_ff", shape=self.cfg.h5file.root.ModelData.faulted_depth.shape
+        self.rho_ff = self.cfg.create_array(
+            "rho_ff", shape=self.cfg.model_store["faulted_depth"].shape
         )
-        self.vp_ff = self.cfg.hdf_init(
-            "vp_ff", shape=self.cfg.h5file.root.ModelData.faulted_depth.shape
+        self.vp_ff = self.cfg.create_array(
+            "vp_ff", shape=self.cfg.model_store["faulted_depth"].shape
         )
-        self.vs_ff = self.cfg.hdf_init(
-            "vs_ff", shape=self.cfg.h5file.root.ModelData.faulted_depth.shape
+        self.vs_ff = self.cfg.create_array(
+            "vs_ff", shape=self.cfg.model_store["faulted_depth"].shape
         )
 
         seis_shape = (
             len(self.angles),
-            *self.cfg.h5file.root.ModelData.faulted_depth.shape,
+            *self.cfg.model_store["faulted_depth"].shape,
         )
         rfc_shape = (seis_shape[0], seis_shape[1], seis_shape[2], seis_shape[3] - 1)
-        self.rfc_raw = self.cfg.hdf_init("rfc_raw", shape=rfc_shape)
-        self.rfc_noise_added = self.cfg.hdf_init("rfc_noise_added", shape=rfc_shape)
+        self.rfc_raw = self.cfg.create_array("rfc_raw", shape=rfc_shape)
+        self.rfc_noise_added = self.cfg.create_array("rfc_noise_added", shape=rfc_shape)
 
     def build_elastic_properties(self, mixing_method="inv_vel"):
         """
@@ -103,9 +107,9 @@ class SeismicVolume(Geomodel):
         fs_fr = np.load(self.cfg.wavelets[2])
 
         for wavelet_count in range(n_wavelets):
-            low_freq_pctile = np.random.uniform(0, 100)
-            mid_freq_pctile = np.random.uniform(0, 100)
-            high_freq_pctile = np.random.uniform(0, 100)
+            low_freq_pctile = self.rng.uniform(0, 100)
+            mid_freq_pctile = self.rng.uniform(0, 100)
+            high_freq_pctile = self.rng.uniform(0, 100)
             low_med_high_percentiles = (
                 low_freq_pctile,
                 mid_freq_pctile,
@@ -287,89 +291,65 @@ class SeismicVolume(Geomodel):
         scaled_data[1 + cube_incr, ...] *= factor_mid
         scaled_data[2 + cube_incr, ...] *= factor_far
 
+        seismic_dir = os.path.join(self.cfg.work_subfolder, "seismic")
+        os.makedirs(seismic_dir, exist_ok=True)
+        dims = ("inline", "crossline", "time")
         for i, ang in enumerate(self.cfg.incident_angles):
             data = scaled_data[i, ...]
             fname = f"{name}_{ang}_degrees"
-            self.write_cube_to_disk(data, fname)
+            write_volume_to_zarr(
+                data,
+                os.path.join(seismic_dir, f"{fname}_{self.cfg.date_stamp}.zarr"),
+                name="amplitude",
+                dims=dims,
+                attrs={"angle_deg": ang, "sample_rate_ms": self.cfg.digi},
+            )
         normed_data = normalize_seismic(scaled_data)
         for i, ang in enumerate(self.cfg.incident_angles):
             data = normed_data[i, ...]
             fname = f"{name}_{ang}_degrees_normalized"
-            self.write_cube_to_disk(data, fname)
+            write_volume_to_zarr(
+                data,
+                os.path.join(seismic_dir, f"{fname}_{self.cfg.date_stamp}.zarr"),
+                name="amplitude",
+                dims=dims,
+                attrs={"angle_deg": ang, "sample_rate_ms": self.cfg.digi},
+            )
         return normed_data
 
-    @staticmethod
-    def random_z_rho_vp_vs(dmin=-7, dmax=7):
-        delta_z_rho = int(np.random.uniform(dmin, dmax))
-        delta_z_vp = int(np.random.uniform(dmin, dmax))
-        delta_z_vs = int(np.random.uniform(dmin, dmax))
+    def random_z_rho_vp_vs(self, dmin=-7, dmax=7):
+        delta_z_rho = int(self.rng.uniform(dmin, dmax))
+        delta_z_vp = int(self.rng.uniform(dmin, dmax))
+        delta_z_vs = int(self.rng.uniform(dmin, dmax))
         return delta_z_rho, delta_z_vp, delta_z_vs
 
     def create_rfc_volumes(self):
         """
         Build a 3D array of PP-Reflectivity using Zoeppritz for each incident angle given.
 
-        :return: 4D array of PP-Reflectivity. 4th dimension holds reflectivities of each incident angle provided
+        Uses the Numba parallel kernel for performance.
+
+        :return: 4D array of PP-Reflectivity. First dimension holds reflectivities of each incident angle provided
         """
-        theta = np.asanyarray(self.angles).reshape(
-            (-1, 1)
-        )  # Convert angles into a column vector
-
-        # Make empty array to store RPP via zoeppritz
-        zoep = np.zeros(
-            (self.rho.shape[0], self.rho.shape[1], self.rho.shape[2] - 1, theta.size),
-            dtype="complex64",
-        )
-
-        _rho = self.rho[:]
-        _vp = self.vp[:]
-        _vs = self.vs[:]
+        _rho = np.ascontiguousarray(self.rho[:], dtype=np.float32)
+        _vp = np.ascontiguousarray(self.vp[:], dtype=np.float32)
+        _vs = np.ascontiguousarray(self.vs[:], dtype=np.float32)
         if self.cfg.verbose:
             print("Checking for null values inside create_rfc_volumes:\n")
             print(f"Rho: {np.min(_rho)}, {np.max(_rho)}")
             print(f"Vp: {np.min(_vp)}, {np.max(_vp)}")
             print(f"Vs: {np.min(_vs)}, {np.max(_vs)}")
-        # Doing this for each trace & all (5) angles is actually quicker than doing entire cubes for each angle
-        for i in trange(
-            self.rho.shape[0],
-            desc=f"Calculating Zoeppritz for {len(self.angles)} angles",
-        ):
-            for j in range(self.rho.shape[1]):
-                rho1, rho2 = _rho[i, j, :-1], _rho[i, j, 1:]
-                vp1, vp2 = _vp[i, j, :-1], _vp[i, j, 1:]
-                vs1, vs2 = _vs[i, j, :-1], _vs[i, j, 1:]
-                rfc = RFC(vp1, vs1, rho1, vp2, vs2, rho2, theta)
-                zoep[i, j, :, :] = rfc.zoeppritz_reflectivity().T
-        # Set any voxels with imaginary parts to 0, since all transmitted energy travels along the reflector
-        # zoep[np.where(np.imag(zoep) != 0)] = 0
-        # discard complex values and set dtype to float64
-        zoep = np.real(zoep).astype("float64")
+
+        n_ang = len(self.angles)
+        il, xl, z = _rho.shape
+        out = np.zeros((n_ang, il, xl, z - 1), dtype=np.float32)
+        _numba_compute_rfc(_vp, _vs, _rho, self.angles, out)
         del _rho, _vp, _vs
 
-        # Move the angle from last dimension to first
-        self.rfc_raw[:] = np.moveaxis(zoep, -1, 0)
+        self.rfc_raw[:] = out
 
-        if self.cfg.hdf_store:
-            for n, d in zip(
-                [
-                    "qc_volume_rfc_raw_{}_degrees".format(
-                        str(self.angles[x]).replace(".", "_")
-                    )
-                    for x in range(self.rfc_raw.shape[0])
-                ],
-                [self.rfc_raw[x, ...] for x in range(self.rfc_raw.shape[0])],
-            ):
-                write_data_to_hdf(n, d, self.cfg.hdf_master)
         if self.cfg.model_qc_volumes:
             # Write raw RFC values to disk
-            _ = [
-                self.write_cube_to_disk(
-                    self.rfc_raw[x, ...],
-                    f"qc_volume_rfc_raw_{self.angles[x]}_degrees",
-                )
-                for x in range(self.rfc_raw.shape[0])
-            ]
-            max_amp = np.max(np.abs(self.rfc_raw[:]))
             _ = [
                 self.write_cube_to_disk(
                     self.rfc_raw[x, ...],
@@ -382,15 +362,15 @@ class SeismicVolume(Geomodel):
         if verbose:
             print("   ... inside noise3D")
 
-        noise_seed = np.random.randint(1, high=(2 ** (32 - 1)))
-        sign_seed = np.random.randint(1, high=(2 ** (32 - 1)))
+        noise_seed = self.rng.integers(1, high=(2 ** (32 - 1)))
+        sign_seed = self.rng.integers(1, high=(2 ** (32 - 1)))
 
-        np.random.seed(noise_seed)
-        noise3d = np.random.exponential(
+        # np.random.seed(noise_seed)
+        noise3d = self.rng.exponential(
             1.0 / 100.0, size=cube_shape[0] * cube_shape[1] * cube_shape[2]
         )
-        np.random.seed(sign_seed)
-        sign = np.random.binomial(
+        # np.random.seed(sign_seed)
+        sign = self.rng.binomial(
             1, 0.5, size=cube_shape[0] * cube_shape[1] * cube_shape[2]
         )
 
@@ -445,8 +425,8 @@ class SeismicVolume(Geomodel):
         noise_0deg = self.noise_3d(self.rfc_raw.shape[1:], verbose=False)
         noise_45deg = self.noise_3d(self.rfc_raw.shape[1:], verbose=False)
         # Store the noise models
-        self.noise_0deg = self.cfg.hdf_init("noise_0deg", shape=noise_0deg.shape)
-        self.noise_45deg = self.cfg.hdf_init("noise_45deg", shape=noise_45deg.shape)
+        self.noise_0deg = self.cfg.create_array("noise_0deg", shape=noise_0deg.shape)
+        self.noise_45deg = self.cfg.create_array("noise_45deg", shape=noise_45deg.shape)
         self.noise_0deg[:] = noise_0deg
         self.noise_45deg[:] = noise_45deg
 
@@ -506,28 +486,14 @@ class SeismicVolume(Geomodel):
         num = data.shape[0]
         if self.cfg.verbose:
             print(f"Applying Bandpass to {num} cubes")
-        if self.cfg.multiprocess_bp:
-            # Much faster to use multiprocessing and apply band-limitation to entire cube at once
-            with Pool(processes=min(num, os.cpu_count() - 2)) as p:
-                iterator = zip(
-                    [data[x, ...] for x in range(num)],
-                    itertools.repeat(b),
-                    itertools.repeat(a),
-                )
-                out_cubes_mp = p.starmap(self._run_bandpass_on_cubes, iterator)
-            out_cubes = np.asarray(out_cubes_mp)
-        else:
-            # multiprocessing can fail using Python version 3.6 and very large arrays
-            out_cubes = np.zeros_like(data)
-            for idx in range(num):
-                out_cubes[idx, ...] = self._run_bandpass_on_cubes(data[idx, ...], b, a)
 
-        return out_cubes
+        def _process(idx):
+            data[idx, ...] = apply_butterworth_bandpass(data[idx, ...], b, a)
 
-    @staticmethod
-    def _run_bandpass_on_cubes(data, b, a):
-        out_cube = apply_butterworth_bandpass(data, b, a)
-        return out_cube
+        with ThreadPoolExecutor(max_workers=min(num, (os.cpu_count() or 1))) as executor:
+            list(executor.map(_process, range(num)))
+
+        return data
 
     def apply_lateral_filter(self, data):
         from scipy.ndimage import uniform_filter
@@ -551,7 +517,7 @@ class SeismicVolume(Geomodel):
     def augment_data_and_labels(self, normalised_seismic, seabed):
         from datagenerator.Augmentation import tz_stretch, uniform_stretch
 
-        hc_labels = self.cfg.h5file.root.ModelData.hc_labels[:]
+        hc_labels = self.cfg.model_store["hc_labels"][:]
         data, labels = tz_stretch(
             normalised_seismic,
             hc_labels[..., : self.cfg.cube_shape[2] + self.cfg.pad_samples - 1],
@@ -591,18 +557,18 @@ class SeismicVolume(Geomodel):
             )
         # generate 1 to 3 randomly located velocity fractions at random depth indices
         for _ in range(250):
-            num_tie_points = np.random.randint(low=1, high=4)
-            tie_fractions = np.random.uniform(
+            num_tie_points = self.rng.integers(low=1, high=4)
+            tie_fractions = self.rng.uniform(
                 low=-velocity_fraction, high=velocity_fraction, size=num_tie_points
             )
             if num_tie_points > 1:
-                tie_indices = np.random.uniform(
+                tie_indices = self.rng.uniform(
                     low=0.25 * nsamples, high=0.75 * nsamples, size=num_tie_points
                 ).astype("int")
 
             else:
                 tie_indices = int(
-                    np.random.uniform(low=0.25 * nsamples, high=0.75 * nsamples)
+                    self.rng.uniform(low=0.25 * nsamples, high=0.75 * nsamples)
                 )
             tie_fractions = np.hstack(([0.0, 0.0], tie_fractions, [0.0, 0.0]))
             tie_indices = np.hstack(([0, 1], tie_indices, [nsamples - 2, nsamples - 1]))
@@ -713,15 +679,15 @@ class SeismicVolume(Geomodel):
         layer_half_range = self.cfg.rpm_scaling_factors["layershiftsamples"]
         property_half_range = self.cfg.rpm_scaling_factors["RPshiftsamples"]
 
-        depth = self.cfg.h5file.root.ModelData.faulted_depth[:]
+        depth = self.cfg.model_store["faulted_depth"][:]
         lith = self.faults.faulted_lithology[:]
         net_to_gross = self.faults.faulted_net_to_gross[:]
 
-        oil_closures = self.cfg.h5file.root.ModelData.oil_closures[:]
-        gas_closures = self.cfg.h5file.root.ModelData.gas_closures[:]
+        oil_closures = self.cfg.model_store["oil_closures"][:]
+        gas_closures = self.cfg.model_store["gas_closures"][:]
 
         integer_faulted_age = (
-            self.cfg.h5file.root.ModelData.faulted_age_volume[:] + 0.00001
+            self.cfg.model_store["faulted_age_volume"][:] + 0.00001
         ).astype(int)
 
         # Use empty class object to store all Rho, Vp, Vs volumes (randomised, fluid factor and non randomised)
@@ -1097,7 +1063,7 @@ class SeismicVolume(Geomodel):
 
     def get_delta_z_layer(self, z, half_range, z_cells):
         if z > self.first_random_lyr:
-            delta_z_layer = int(np.random.uniform(-half_range, half_range))
+            delta_z_layer = int(self.rng.uniform(-half_range, half_range))
         else:
             delta_z_layer = 0
         if self.cfg.verbose:
@@ -1268,13 +1234,11 @@ class SeismicVolume(Geomodel):
 
     @staticmethod
     def fix_zero_values_at_base(props):
-        """Check for zero values at base of property volumes and replace with
-        shallower values if present
+        """Forward-fill zero values at the base of property volumes.
 
-        Args:
-            a ([type]): [description]
-            b ([type]): [description]
-            c ([type]): [description]
+        Replaces each zero voxel with the nearest non-zero value above it
+        along the z-axis (last axis).  Leading zeros (before the first
+        non-zero per trace) are left untouched.
         """
         for vol in [
             props.rho,
@@ -1284,8 +1248,15 @@ class SeismicVolume(Geomodel):
             props.vp_ff,
             props.vs_ff,
         ]:
-            for x, y, z in np.argwhere(vol == 0.0):
-                vol[x, y, z] = vol[x, y, z - 1]
+            nz = vol.shape[-1]
+            # For each sample position, record the index of the nearest
+            # non-zero value at or above it.  np.maximum.accumulate over
+            # the z-axis propagates the latest non-zero index forward.
+            pos = np.where(vol != 0.0, np.arange(nz), 0)
+            filled_idx = np.maximum.accumulate(pos, axis=-1)
+            i_idx = np.arange(vol.shape[0])[:, np.newaxis, np.newaxis]
+            j_idx = np.arange(vol.shape[1])[np.newaxis, :, np.newaxis]
+            vol[:] = vol[i_idx, j_idx, filled_idx]
         return props
 
     def apply_scaling_factors(self, props, ng, lith):
@@ -1346,18 +1317,58 @@ class SeismicVolume(Geomodel):
 
     def write_property_volumes_to_disk(self):
         """Write Rho, Vp, Vs volumes to disk."""
-        self.write_cube_to_disk(
+        seismic_dir = os.path.join(self.cfg.work_subfolder, "seismic")
+        os.makedirs(seismic_dir, exist_ok=True)
+        dims = ("inline", "crossline", "time")
+        write_volume_to_zarr(
             self.rho[:],
-            "qc_volume_rho",
+            os.path.join(seismic_dir, f"qc_volume_rho_{self.cfg.date_stamp}.zarr"),
+            name="data",
+            dims=dims,
         )
-        self.write_cube_to_disk(
+        write_volume_to_zarr(
             self.vp[:],
-            "qc_volume_vp",
+            os.path.join(seismic_dir, f"qc_volume_vp_{self.cfg.date_stamp}.zarr"),
+            name="data",
+            dims=dims,
         )
-        self.write_cube_to_disk(
+        write_volume_to_zarr(
             self.vs[:],
-            "qc_volume_vs",
+            os.path.join(seismic_dir, f"qc_volume_vs_{self.cfg.date_stamp}.zarr"),
+            name="data",
+            dims=dims,
         )
+
+    def _write_gather_blocking(self, data, group_name, attrs=None):
+        """Blocking zarr v3 write — called from background thread."""
+        import zarr
+        path = getattr(self.cfg, 'gather_store_path',
+                       os.path.join(self.cfg.work_folder, "gathers.zarr"))
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        store = zarr.storage.LocalStore(path)
+        root = zarr.open_group(store=store, mode="a")
+        if group_name in root:
+            del root[group_name]
+        root.create_array(group_name, data=data, overwrite=True)
+        if attrs:
+            root[group_name].attrs.update(attrs)
+
+    def write_gather_to_zarr(self, data, group_name, attrs=None):
+        """Non-blocking: fire background thread, continue pipeline."""
+        import threading
+        self._gather_thread = threading.Thread(
+            target=self._write_gather_blocking,
+            args=(data, group_name, attrs),
+            name="gather-zarr-write",
+            daemon=True,
+        )
+        self._gather_thread.start()
+
+    def join_gather_write(self):
+        """Wait for the background gather write to complete."""
+        t = getattr(self, "_gather_thread", None)
+        if t is not None:
+            t.join(timeout=300)
 
 
 class ElasticProperties3D:
@@ -1486,16 +1497,10 @@ def derive_butterworth_bandpass(lowcut, highcut, digitisation, order=4):
 
 
 def apply_butterworth_bandpass(data, b, a):
-    """Apply Butterworth bandpass to data"""
-    from scipy.signal import tf2zpk, filtfilt
+    """Apply Butterworth bandpass to data using filtfilt with pad method."""
+    from scipy.signal import filtfilt
 
-    # Use irlen to remove artefacts generated at base of cubes during bandlimitation
-    _, p, _ = tf2zpk(b, a)
-    eps = 1e-9
-    r = np.max(np.abs(p))
-    approx_impulse_len = int(np.ceil(np.log(eps) / np.log(r)))
-    y = filtfilt(b, a, data, method="gust", irlen=approx_impulse_len)
-    # y = filtfilt(b, a, data)
+    y = filtfilt(b, a, data, method="pad")
     return y
 
 
@@ -1513,8 +1518,57 @@ def trim_triangular(low, mid, high):
 
 
 def apply_wavelet(cube, wavelet):
-    filtered_cube = np.zeros_like(cube)
-    for i in range(cube.shape[0]):
-        for j in range(cube.shape[1]):
-            filtered_cube[i, j, :] = np.convolve(cube[i, j, :], wavelet, mode="same")
-    return filtered_cube
+    """Convolve ``cube`` (il, xl, z) with ``wavelet`` (1D) along the z-axis.
+
+    Uses ``scipy.signal.oaconvolve`` (overlap-add) which is algorithmically
+    equivalent but faster than the previous per-trace loop for the long
+    z-axis / short wavelet shapes common here.
+    """
+    from scipy.signal import oaconvolve
+
+    return oaconvolve(cube, wavelet[np.newaxis, np.newaxis, :], mode="same", axes=-1)
+
+
+def _compute_class_ids(integer_age, net_to_gross, oil, gas):
+    """Classify each voxel into fluid class buckets.
+
+    Class codes:
+        0 = unprocessed (age==0, oil+gas overlap, or net_to_gross <= 0)
+        2 = brine sand (age>0, ng>0, no closure)
+        3 = oil sand  (age>0, ng>0, oil-only closure)
+        4 = gas sand  (age>0, ng>0, gas-only closure)
+
+    Class 1 is reserved but never emitted.
+    """
+    valid = integer_age > 0
+    is_sand = net_to_gross > 0.0
+    brine = valid & is_sand & (oil == 0.0) & (gas == 0.0)
+    oil_only = valid & is_sand & (oil == 1.0) & (gas == 0.0)
+    gas_only = valid & is_sand & (oil == 0.0) & (gas == 1.0)
+    class_id = np.zeros_like(integer_age, dtype=np.int8)
+    class_id[brine] = 2
+    class_id[oil_only] = 3
+    class_id[gas_only] = 4
+    return class_id
+
+
+def _precompute_layer_indices(integer_faulted_age, net_to_gross, class_id, z_max):
+    """Precompute per-layer voxel indices for the property builder.
+
+    Returns a dict ``{z: {bucket: (i, j, k), ...}}`` for z in ``range(1, z_max)``.
+    Buckets: ``layer``, ``shale``, ``brine``, ``oil``, ``gas``.
+
+    This is a drop-in replacement for the per-layer ``np.where`` loop in
+    ``build_property_models_randomised_depth_v3``.
+    """
+    out = {}
+    for z in range(1, z_max):
+        layer_mask = integer_faulted_age == z
+        out[z] = {
+            "layer": np.where(layer_mask),
+            "shale": np.where(layer_mask & (net_to_gross >= 0.0)),
+            "brine": np.where(layer_mask & (class_id == 2)),
+            "oil": np.where(layer_mask & (class_id == 3)),
+            "gas": np.where(layer_mask & (class_id == 4)),
+        }
+    return out

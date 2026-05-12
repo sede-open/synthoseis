@@ -1,5 +1,6 @@
 from math import cos, sin
 import numpy as np
+from numpy.random import default_rng
 from datagenerator.util import is_it_in_hull
 
 
@@ -29,12 +30,13 @@ class SaltModel:
         None
         """
         self.cfg = parameters
+        self.rng = default_rng(parameters.horizon_ss.spawn(1)[0])
         cube_shape = (
             self.cfg.cube_shape[0],
             self.cfg.cube_shape[1],
             self.cfg.cube_shape[2] + self.cfg.pad_samples,
         )
-        self.salt_segments = self.cfg.hdf_init("salt_segments", shape=cube_shape)
+        self.salt_segments = self.cfg.create_array("salt_segments", shape=cube_shape)
         self.points = []
 
     def compute_salt_body_segmentation(self) -> None:
@@ -53,12 +55,12 @@ class SaltModel:
         None
         """
         print("\n\n...compute salt segments cube...")
-        salt_radius = np.random.triangular(
+        salt_radius = self.rng.triangular(
             self.cfg.cube_shape[0] / 6,
             self.cfg.cube_shape[0] / 5,
             self.cfg.cube_shape[0] / 4,
         )
-        shallowest_salt = self.cfg.h5file.root.ModelData.faulted_depth_maps[
+        shallowest_salt = self.cfg.model_store["faulted_depth_maps"][
             :, :, 1
         ].copy()
         # shallowest_salt -= pad_samples / infill_factor
@@ -66,7 +68,7 @@ class SaltModel:
         # shallowest_salt /= infill_factor
         shallowest_salt = shallowest_salt[np.abs(shallowest_salt) < 1.0e10]
         shallowest_salt = np.percentile(shallowest_salt[~np.isnan(shallowest_salt)], 99)
-        shallowest_salt += np.random.uniform(150, 300)
+        shallowest_salt += self.rng.uniform(150, 300)
         # output_cube = np.zeros(self.cfg.cube_shape)
         print(
             f"   ...top of salt at {shallowest_salt}, with cube having shape {self.salt_segments.shape}"
@@ -108,14 +110,14 @@ class SaltModel:
             x = (
                 cx
                 + radius * cos(iangle * np.pi / 180.0)
-                + np.random.uniform(-xy_max_jitter, xy_max_jitter)
+                + self.rng.uniform(-xy_max_jitter, xy_max_jitter)
             )
             y = (
                 cy
                 + radius * sin(iangle * np.pi / 180.0)
-                + np.random.uniform(-xy_max_jitter, xy_max_jitter)
+                + self.rng.uniform(-xy_max_jitter, xy_max_jitter)
             )
-            z = cz + np.random.uniform(-xy_max_jitter / 2.0, xy_max_jitter / 2.0)
+            z = cz + self.rng.uniform(-xy_max_jitter / 2.0, xy_max_jitter / 2.0)
             points.append([x, y, z])
             if verbose:
                 if iangle == 0.0:
@@ -167,9 +169,9 @@ class SaltModel:
 
         # Add points for the tip
         xy_max_jitter = 0.1 * r_shallow
-        x = cx + np.random.uniform(-xy_max_jitter, xy_max_jitter)
-        y = cy + np.random.uniform(-xy_max_jitter, xy_max_jitter)
-        z = c_tip + np.random.uniform(-xy_max_jitter / 2.0, xy_max_jitter / 2.0)
+        x = cx + self.rng.uniform(-xy_max_jitter, xy_max_jitter)
+        y = cy + self.rng.uniform(-xy_max_jitter, xy_max_jitter)
+        z = c_tip + self.rng.uniform(-xy_max_jitter / 2.0, xy_max_jitter / 2.0)
         self.points.append([x, y, z])
         print(f"\n   ...tip (x, y, z) = ({x:.2f}, {y:.2f}, {z:.2f})")
 
@@ -203,24 +205,24 @@ class SaltModel:
         # gentle anitclinal structure
         # Z-coordinates for center of top salt
         C1_deep = (top + salt_radius) * 1.1
-        C1_mid = C1_deep - salt_radius * np.random.uniform(0.35, 0.45)
-        C1_shallow = C1_deep - salt_radius * np.random.uniform(0.87, 0.93)
-        C1_tip = C1_deep - salt_radius * np.random.uniform(0.98, 1.02)
+        C1_mid = C1_deep - salt_radius * self.rng.uniform(0.35, 0.45)
+        C1_shallow = C1_deep - salt_radius * self.rng.uniform(0.87, 0.93)
+        C1_tip = C1_deep - salt_radius * self.rng.uniform(0.98, 1.02)
         top_centres = [C1_deep, C1_mid, C1_shallow, C1_tip]
 
         # Radius constants for top of salt
-        R1_deep = salt_radius * np.random.uniform(0.9, 1.1)
-        R1_mid = R1_deep * np.random.uniform(0.37, 0.43)
-        R1_shallow = R1_deep * np.random.uniform(0.18, 0.25)
+        R1_deep = salt_radius * self.rng.uniform(0.9, 1.1)
+        R1_mid = R1_deep * self.rng.uniform(0.37, 0.43)
+        R1_shallow = R1_deep * self.rng.uniform(0.18, 0.25)
         top_radii = [R1_deep, R1_mid, R1_shallow]
 
         cube_shape = self.salt_segments.shape
 
         # x,y coords for top of salt
-        center_x = cube_shape[0] / 2 + np.random.uniform(
+        center_x = cube_shape[0] / 2 + self.rng.uniform(
             -cube_shape[0] * 0.4, cube_shape[0] * 0.4
         )
-        center_y = cube_shape[1] / 2 + np.random.uniform(
+        center_y = cube_shape[1] / 2 + self.rng.uniform(
             -cube_shape[0] * 0.4, cube_shape[0] * 0.4
         )
         self.salt_circle_points(top_centres, top_radii, center_x, center_y)
@@ -228,25 +230,25 @@ class SaltModel:
         # Build points to model the base of a salt body
         C2_deep = min(
             max(
-                C1_deep + salt_radius * np.random.uniform(2.3, 12.5),
-                cube_shape[2] - 2.0 * (salt_radius * np.random.uniform(-1.3, 3.5)),
+                C1_deep + salt_radius * self.rng.uniform(2.3, 12.5),
+                cube_shape[2] - 2.0 * (salt_radius * self.rng.uniform(-1.3, 3.5)),
             ),
             cube_shape[2] + 1.0 * (salt_radius),
         )
-        C2_mid = C2_deep + salt_radius * np.random.uniform(0.35, 0.45) / 2.0
-        C2_shallow = C2_deep + salt_radius * np.random.uniform(0.87, 0.93) / 2.0
-        C2_tip = C2_deep + salt_radius * np.random.uniform(0.98, 1.02) / 2.0
+        C2_mid = C2_deep + salt_radius * self.rng.uniform(0.35, 0.45) / 2.0
+        C2_shallow = C2_deep + salt_radius * self.rng.uniform(0.87, 0.93) / 2.0
+        C2_tip = C2_deep + salt_radius * self.rng.uniform(0.98, 1.02) / 2.0
         base_centres = [C2_deep, C2_mid, C2_shallow, C2_tip]
 
         # radius constants for lower circle
-        R2_deep = R1_shallow / 2.0 * np.random.uniform(0.9, 1.1)
-        R2_mid = R2_deep * np.random.uniform(0.37, 0.43)
-        R2_shallow = R2_deep * np.random.uniform(0.18, 0.25)
+        R2_deep = R1_shallow / 2.0 * self.rng.uniform(0.9, 1.1)
+        R2_mid = R2_deep * self.rng.uniform(0.37, 0.43)
+        R2_shallow = R2_deep * self.rng.uniform(0.18, 0.25)
         base_radii = [R2_deep, R2_mid, R2_shallow]
 
         # x,y coords for lower circle
-        x_center = center_x * np.random.uniform(0.3, 1.7)
-        y_center = center_y * np.random.uniform(0.3, 1.7)
+        x_center = center_x * self.rng.uniform(0.3, 1.7)
+        y_center = center_y * self.rng.uniform(0.3, 1.7)
 
         self.salt_circle_points(base_centres, base_radii, x_center, y_center)
 
@@ -297,9 +299,9 @@ class SaltModel:
             indexing="ij",
         )
 
-        depth_maps = self.cfg.h5file.root.ModelData.faulted_depth_maps[:]
-        depth_maps_gaps = self.cfg.h5file.root.ModelData.faulted_depth_maps_gaps[:]
-        salt_segments = self.cfg.h5file.root.ModelData.salt_segments[:]
+        depth_maps = self.cfg.model_store["faulted_depth_maps"][:]
+        depth_maps_gaps = self.cfg.model_store["faulted_depth_maps_gaps"][:]
+        salt_segments = self.cfg.model_store["salt_segments"][:]
 
         depth_maps_gaps_salt = np.zeros_like(depth_maps_gaps)
 
@@ -323,7 +325,7 @@ class SaltModel:
             faulted_depth_map_indices = np.clip(
                 faulted_depth_map_indices,
                 0,
-                self.cfg.h5file.root.ModelData.faulted_depth.shape[2] - 1,
+                self.cfg.model_store["faulted_depth"].shape[2] - 1,
             )
 
             _label = salt_segments[ii, jj, faulted_depth_map_indices]
@@ -343,7 +345,7 @@ class SaltModel:
             except:
                 pass
 
-        self.cfg.h5file.root.ModelData.faulted_depth_maps_gaps[:] = depth_maps_gaps_salt
+        self.cfg.model_store["faulted_depth_maps_gaps"][:] = depth_maps_gaps_salt
 
     def update_depth_maps_with_salt_segments_drag(self):
         """
@@ -372,9 +374,9 @@ class SaltModel:
             indexing="ij",
         )
 
-        depth_maps = self.cfg.h5file.root.ModelData.faulted_depth_maps[:]
-        depth_maps_gaps = self.cfg.h5file.root.ModelData.faulted_depth_maps_gaps[:]
-        salt_segments = self.cfg.h5file.root.ModelData.salt_segments[:]
+        depth_maps = self.cfg.model_store["faulted_depth_maps"][:]
+        depth_maps_gaps = self.cfg.model_store["faulted_depth_maps_gaps"][:]
+        salt_segments = self.cfg.model_store["salt_segments"][:]
 
         if self.cfg.model_qc_volumes:
             np.save(f"{self.cfg.work_subfolder}/depth_maps_presalt.npy", depth_maps)
@@ -409,7 +411,7 @@ class SaltModel:
             faulted_depth_map_indices = np.clip(
                 faulted_depth_map_indices,
                 0,
-                self.cfg.h5file.root.ModelData.faulted_depth.shape[2] - 1,
+                self.cfg.model_store["faulted_depth"].shape[2] - 1,
             )
 
             _label = salt_segments[ii, jj, faulted_depth_map_indices]
@@ -437,7 +439,7 @@ class SaltModel:
             # faulted_depth_map_indices = np.clip(
             #    faulted_depth_map_indices,
             #    0,
-            #    self.cfg.h5file.root.ModelData.faulted_depth.shape[2] - 1,
+            #    self.cfg.model_store["faulted_depth"].shape[2] - 1,
             # )
             # _label = salt_segments[ii, jj, faulted_depth_map_indices]
 
@@ -475,8 +477,8 @@ class SaltModel:
 
         depth_maps_gaps_salt[np.isnan(depth_maps_gaps)] = np.nan
 
-        # self.cfg.h5file.root.ModelData.faulted_depth_maps[:] = depth_maps
-        # self.cfg.h5file.root.ModelData.faulted_depth_maps_gaps[:] = depth_maps_gaps_salt
+        # self.cfg.model_store["faulted_depth_maps"][:] = depth_maps
+        # self.cfg.model_store["faulted_depth_maps_gaps"][:] = depth_maps_gaps_salt
 
         if self.cfg.model_qc_volumes:
             np.save(f"{self.cfg.work_subfolder}/depth_maps_salt.npy", depth_maps_salt)

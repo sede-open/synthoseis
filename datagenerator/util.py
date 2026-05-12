@@ -1,5 +1,8 @@
 import os
+import logging
 import numpy as np
+
+logger = logging.getLogger(__name__)
 
 
 def find_line_with_most_voxels(volume, voxel_thresholds, cfg):
@@ -888,14 +891,7 @@ def import_matplotlib():
     return plt
 
 
-def write_data_to_hdf(n, d, h5file):
-    import h5py
 
-    with h5py.File(h5file, "a") as hf:
-        hf.create_dataset(name=n, data=d, compression="lzf")
-
-
-# Useful functions, not directly used for data generation
 def qc_folders(directory):
     """Count how many model_parameter.txt files contain elapse time
 

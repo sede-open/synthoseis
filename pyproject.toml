@@ -3,17 +3,26 @@ name = "synthoseis"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.11"
 dependencies = [
     "bruges>=0.5.4",
+    "commentjson",
     "matplotlib",
-    "noise>=1.2.2",
-    "numpy<2",
+    "numba",
+    "numpy>=2.0",
+    "opensimplex>=0.4.5.1",
     "plotly",
+    "psutil>=7.2.2",
     "ruff>=0.10.0",
     "scikit-image",
     "scipy",
     "setuptools>=76.0.0",
-    "tables>=3.9.2",
     "tqdm",
+    "xarray",
+    "zarr>=3",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.3",
 ]
