@@ -9,8 +9,8 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 
 
 class SandFraction(BaseModel):
-    min: float = Field(gt=0, lt=1)
-    max: float = Field(gt=0, lt=1)
+    min: float = Field(ge=0, le=1)
+    max: float = Field(ge=0, le=1)
 
     @model_validator(mode="after")
     def min_lt_max(self) -> "SandFraction":
@@ -28,7 +28,7 @@ class SimulationConfig(BaseModel):
     run_id: str | None = None
 
     cube_shape: list[int] = Field(min_length=3, max_length=3)
-    incident_angles: list[int] = Field(min_length=1)
+    incident_angles: list[int] = Field(min_length=1, max_length=5)
     digi: int = Field(gt=0)
     infill_factor: int = Field(gt=0)
     initial_layer_stdev: list[float] = Field(min_length=2, max_length=2)
@@ -39,7 +39,7 @@ class SimulationConfig(BaseModel):
     bandwidth_low: list[float] = Field(min_length=2, max_length=2)
     bandwidth_high: list[float] = Field(min_length=2, max_length=2)
     bandwidth_ord: int = Field(gt=0)
-    dip_factor_max: float = Field(gt=0)
+    dip_factor_max: float = Field(ge=0)
     min_number_faults: int = Field(ge=0)
     max_number_faults: int = Field(ge=0)
     pad_samples: int = Field(ge=0)
@@ -70,6 +70,14 @@ class SimulationConfig(BaseModel):
         if self.thickness_min >= self.thickness_max:
             raise ValueError(
                 "thickness_min must be strictly less than thickness_max"
+            )
+        return self
+
+    @model_validator(mode="after")
+    def faults_ordering(self) -> "SimulationConfig":
+        if self.min_number_faults > self.max_number_faults:
+            raise ValueError(
+                "min_number_faults must be less than or equal to max_number_faults"
             )
         return self
 

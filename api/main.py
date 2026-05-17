@@ -97,8 +97,9 @@ async def api_create_run(config: SimulationConfig) -> dict:
     # Insert RUNNING record
     insert_run(run_id, json.dumps(config_dict))
 
-    # Fire-and-forget — do not await here so the HTTP response returns immediately
-    asyncio.ensure_future(launch_run(run_id, str(config_path), REPO_ROOT))
+    # Fire-and-forget — create_task schedules on the running event loop.
+    # do not await so the HTTP response returns immediately.
+    asyncio.create_task(launch_run(run_id, str(config_path), REPO_ROOT))
 
     return {"run_id": run_id, "status": "RUNNING"}
 
@@ -122,7 +123,11 @@ async def api_run_logs(run_id: str) -> StreamingResponse:
     run = get_run(run_id)
     if run is None:
         raise HTTPException(status_code=404, detail=f"Run '{run_id}' not found")
-    return StreamingResponse(stream_logs(run_id), media_type="text/event-stream")
+    return StreamingResponse(
+        stream_logs(run_id),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
 
 
 # ---------------------------------------------------------------------------

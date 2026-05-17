@@ -10,8 +10,6 @@
  */
 import React from "react";
 import {
-  Alignment,
-  AnchorButton,
   Button,
   Card,
   Checkbox,
@@ -20,12 +18,10 @@ import {
   HTMLSelect,
   InputGroup,
   Intent,
-  Navbar,
-  NavbarGroup,
-  NavbarHeading,
   NumericInput,
   Switch,
   Tag,
+  Tooltip,
 } from "@blueprintjs/core";
 import { fetchModels, submitRun } from "../api/client";
 import type { SimulationConfig } from "../types/simulation";
@@ -868,11 +864,14 @@ export default function LaunchPanel({
             checked={basinFloorFans}
             onChange={(e) => setBasinFloorFans((e.target as HTMLInputElement).checked)}
           />
-          <Switch
-            label="Include channels"
-            checked={includeChannels}
-            onChange={(e) => setIncludeChannels((e.target as HTMLInputElement).checked)}
-          />
+          <Tooltip content="Deprecated — channels are always disabled" placement="top">
+            <Switch
+              label="Include channels"
+              checked={false}
+              disabled
+              onChange={() => { /* deprecated, always false */ }}
+            />
+          </Tooltip>
           <Switch
             label="Include salt"
             checked={includeSalt}

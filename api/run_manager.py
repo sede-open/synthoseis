@@ -90,13 +90,19 @@ def list_runs() -> list[dict]:
     return [dict(r) for r in rows]
 
 
-def _update_status(run_id: str, status: str) -> None:
+def _update_status(run_id: str, status: str, output_folder: str | None = None) -> None:
     conn = _connect()
     if status in ("COMPLETE", "FAILED"):
-        conn.execute(
-            "UPDATE runs SET status=?, ended_at=datetime('now') WHERE run_id=?",
-            (status, run_id),
-        )
+        if output_folder is not None:
+            conn.execute(
+                "UPDATE runs SET status=?, ended_at=datetime('now'), output_folder=? WHERE run_id=?",
+                (status, output_folder, run_id),
+            )
+        else:
+            conn.execute(
+                "UPDATE runs SET status=?, ended_at=datetime('now') WHERE run_id=?",
+                (status, run_id),
+            )
     else:
         conn.execute("UPDATE runs SET status=? WHERE run_id=?", (status, run_id))
     conn.commit()
@@ -111,6 +117,20 @@ async def launch_run(run_id: str, config_json_path: str, repo_root: Path) -> Non
         config_json_path: Absolute path to the written config JSON file.
         repo_root: Repository root — used as cwd so `python main.py` resolves.
     """
+    import json as _json
+    # Derive the expected output folder from the config so we can persist it
+    # to runs.db once the run completes (needed by GET /api/runs/{id}/manifest).
+    try:
+        _cfg = _json.loads(pathlib.Path(config_json_path).read_text())
+        _project_folder = _cfg.get("project_folder", "")
+        _run_id_suffix = f"_{run_id}" if run_id else ""
+        # Parameters.py names the subfolder seismic__{datestamp}_{runid};
+        # we don't know the datestamp yet, so we store the project_folder root
+        # and let generate_manifest.py discover the exact subfolder.
+        _output_folder = _project_folder
+    except Exception:
+        _output_folder = None
+
     process = await asyncio.create_subprocess_exec(
         "python",
         "main.py",
@@ -124,10 +144,11 @@ async def launch_run(run_id: str, config_json_path: str, repo_root: Path) -> Non
     )
     _processes[run_id] = process
 
-    # Wait for the process and update status on completion
+    # Wait for the process and update status + output_folder on completion
     return_code = await process.wait()
     _processes.pop(run_id, None)
-    _update_status(run_id, "COMPLETE" if return_code == 0 else "FAILED")
+    final_status = "COMPLETE" if return_code == 0 else "FAILED"
+    _update_status(run_id, final_status, output_folder=_output_folder)
 
 
 async def stream_logs(run_id: str) -> AsyncGenerator[str, None]:
@@ -165,9 +186,6 @@ async def stream_logs(run_id: str) -> AsyncGenerator[str, None]:
         yield f"data: {line.decode(errors='replace').rstrip()}\n\n"
 
     # Process finished — report final status
-    return_code = await process.wait() if process.returncode is None else process.returncode
-    if isinstance(return_code, asyncio.subprocess.Process):
-        return_code = await return_code.wait()
     final_status = "COMPLETE" if (process.returncode == 0) else "FAILED"
     yield f"event: status\ndata: {final_status}\n\n"
 
