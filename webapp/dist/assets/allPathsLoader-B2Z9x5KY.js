@@ -1,1 +1,0 @@
-import{_ as i,h as n,i as s}from"./blueprint-WPa5euhk.js";var u=function(e,a){return i(void 0,void 0,void 0,function(){var t;return n(this,function(r){switch(r.label){case 0:return[4,s(()=>import("./blueprint-WPa5euhk.js").then(o=>o.j),[],import.meta.url)];case 1:return t=r.sent().getIconPaths,[2,t(e,a)]}})})};export{u as allPathsLoader};

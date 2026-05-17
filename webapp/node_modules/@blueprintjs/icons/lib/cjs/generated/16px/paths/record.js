@@ -1,4 +1,0 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.default = ["M8 3a5 5 0 100 10A5 5 0 108 3z"];
-//# sourceMappingURL=record.js.map

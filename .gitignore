@@ -13,6 +13,10 @@ tags
 wip*
 *.code-workspace
 
+# Webapp build artifacts and dependencies (never commit)
+webapp/node_modules/
+webapp/dist/
+
 # Agentic Foundry / tooling — never commit these
 .agentic-docs/
 .worktrees/
