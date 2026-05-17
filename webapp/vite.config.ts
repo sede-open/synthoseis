@@ -9,6 +9,11 @@ export default defineConfig({
       "/api": "http://localhost:8000",
     },
   },
+  test: {
+    environment: "jsdom",
+    globals: true,
+    setupFiles: ["./src/test/setup.ts"],
+  },
   build: {
     rollupOptions: {
       // Externalise Plotly: loaded from CDN in index.html, not bundled.
