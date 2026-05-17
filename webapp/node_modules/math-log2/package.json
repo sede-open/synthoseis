@@ -1,0 +1,38 @@
+{
+  "name": "math-log2",
+  "version": "1.0.1",
+  "description": "ES2015 Math.log2() ponyfill",
+  "license": "MIT",
+  "repository": "sindresorhus/math-log2",
+  "author": {
+    "name": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com"
+  },
+  "engines": {
+    "node": ">=0.10.0"
+  },
+  "scripts": {
+    "test": "ava"
+  },
+  "files": [
+    "index.js"
+  ],
+  "keywords": [
+    "es2015",
+    "ponyfill",
+    "polyfill",
+    "shim",
+    "number",
+    "math",
+    "log2",
+    "log",
+    "logarithm"
+  ],
+  "devDependencies": {
+    "ava": "*",
+    "float-equal": "^1.0.0",
+    "number-is-nan": "^1.0.0",
+    "positive-zero": "^1.0.0"
+  }
+}

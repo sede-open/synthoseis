@@ -1,0 +1,121 @@
+{
+    "name": "@types/plotly.js",
+    "version": "2.35.14",
+    "description": "TypeScript definitions for plotly.js",
+    "homepage": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/plotly.js",
+    "license": "MIT",
+    "contributors": [
+        {
+            "name": "Chris Gervang",
+            "githubUsername": "chrisgervang",
+            "url": "https://github.com/chrisgervang"
+        },
+        {
+            "name": "Martin Duparc",
+            "githubUsername": "martinduparc",
+            "url": "https://github.com/martinduparc"
+        },
+        {
+            "name": "Frederik Aalund",
+            "githubUsername": "frederikaalund",
+            "url": "https://github.com/frederikaalund"
+        },
+        {
+            "name": "taoqf",
+            "githubUsername": "taoqf",
+            "url": "https://github.com/taoqf"
+        },
+        {
+            "name": "Dadstart",
+            "githubUsername": "Dadstart",
+            "url": "https://github.com/Dadstart"
+        },
+        {
+            "name": "Jared Szechy",
+            "githubUsername": "szechyjs",
+            "url": "https://github.com/szechyjs"
+        },
+        {
+            "name": "Sooraj Pudiyadath",
+            "githubUsername": "soorajpudiyadath",
+            "url": "https://github.com/soorajpudiyadath"
+        },
+        {
+            "name": "Jon Freedman",
+            "githubUsername": "jonfreedman",
+            "url": "https://github.com/jonfreedman"
+        },
+        {
+            "name": "Megan Riel-Mehan",
+            "githubUsername": "meganrm",
+            "url": "https://github.com/meganrm"
+        },
+        {
+            "name": "Josh Miles",
+            "githubUsername": "milesjos",
+            "url": "https://github.com/milesjos"
+        },
+        {
+            "name": "Pramod Mathai",
+            "githubUsername": "skippercool",
+            "url": "https://github.com/skippercool"
+        },
+        {
+            "name": "Michael Arnett",
+            "githubUsername": "marnett-git",
+            "url": "https://github.com/marnett-git"
+        },
+        {
+            "name": "Piotr Błażejewicz",
+            "githubUsername": "peterblazejewicz",
+            "url": "https://github.com/peterblazejewicz"
+        },
+        {
+            "name": "Brandon Mitchell",
+            "githubUsername": "brammitch",
+            "url": "https://github.com/brammitch"
+        },
+        {
+            "name": "Jessica Blizzard",
+            "githubUsername": "blizzardjessica",
+            "url": "https://github.com/blizzardjessica"
+        },
+        {
+            "name": "Oleg Shilov",
+            "githubUsername": "olegshilov",
+            "url": "https://github.com/olegshilov"
+        },
+        {
+            "name": "Pablo Gracia",
+            "githubUsername": "PabloGracia",
+            "url": "https://github.com/PabloGracia"
+        },
+        {
+            "name": "Jeffrey van Gogh",
+            "githubUsername": "jvgogh",
+            "url": "https://github.com/jvgogh"
+        },
+        {
+            "name": "John Abdou",
+            "githubUsername": "jpabdou",
+            "url": "https://github.com/jpabdou"
+        },
+        {
+            "name": "Martin Borst",
+            "githubUsername": "mrtnbrst",
+            "url": "https://github.com/mrtnbrst"
+        }
+    ],
+    "main": "",
+    "types": "index.d.ts",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
+        "directory": "types/plotly.js"
+    },
+    "scripts": {},
+    "dependencies": {},
+    "peerDependencies": {},
+    "typesPublisherContentHash": "4eb90ab07cc63f55c55322f553663b223a7440b647e4efec684e27aa644ddab4",
+    "typeScriptVersion": "5.2"
+}

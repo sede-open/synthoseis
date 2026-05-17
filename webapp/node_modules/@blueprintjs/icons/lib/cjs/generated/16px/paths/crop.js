@@ -1,0 +1,4 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.default = ["M11 15a1 1 0 102 0v-2h2a1 1 0 100-2H5V1a1 1 0 00-2 0v2H1a1 1 0 100 2h2v7a1 1 0 001 1h7v2z", "M12 3H6v2h5v5h2V4a1 1 0 00-1-1z"];
+//# sourceMappingURL=crop.js.map

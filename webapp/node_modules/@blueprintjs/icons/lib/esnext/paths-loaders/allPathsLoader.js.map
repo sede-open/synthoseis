@@ -1,0 +1,1 @@
+{"version":3,"file":"allPathsLoader.js","sourceRoot":"","sources":["../../../src/paths-loaders/allPathsLoader.ts"],"names":[],"mappings":"AAAA;;;;;;;;;;;;;;GAcG;AAIH;;GAEG;AACH,MAAM,CAAC,MAAM,cAAc,GAAoB,KAAK,EAAE,IAAI,EAAE,IAAI,EAAE,EAAE;IAChE,MAAM,EAAE,YAAY,EAAE,GAAG,MAAM,MAAM;IACjC,mDAAmD;IACnD,aAAa,CAChB,CAAC;IACF,OAAO,YAAY,CAAC,IAAI,EAAE,IAAI,CAAC,CAAC;AACpC,CAAC,CAAC"}

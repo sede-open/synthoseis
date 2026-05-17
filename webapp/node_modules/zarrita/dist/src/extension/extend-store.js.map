@@ -1,0 +1,1 @@
+{"version":3,"file":"extend-store.js","sourceRoot":"","sources":["../../../src/extension/extend-store.ts"],"names":[],"mappings":"AACA,OAAO,EAAE,eAAe,EAAmB,MAAM,aAAa,CAAC;AAiC/D,MAAM,UAAU,WAAW,CAC1B,KAAoB,EACpB,GAAG,UAA2C;IAE9C,OAAO,eAAe,CAAC,KAAK,EAAE,UAAU,CAAC,CAAC;AAC3C,CAAC"}

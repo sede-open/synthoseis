@@ -1,0 +1,4 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.default = ["M7 8a1 1 0 000-2H4a1 1 0 00-1 1v3a1 1 0 002 0v-.637l2.36 2.357a.962.962 0 001.36-1.358L6.355 8H7z", "M1 1c-.6 0-1 .5-1 1v12a1 1 0 001 1h14c.6 0 1-.4 1-1V2a1 1 0 00-1-1H1zm13 12H2V5h12v8z"];
+//# sourceMappingURL=th-virtual.js.map

@@ -1,0 +1,4 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.default = ["M8.697.29a.99.99 0 00-.7-.29c-.27 0-.53.11-.71.29L4.29 3.28A1.003 1.003 0 005.71 4.7l1.288-1.29L7 7H1a1 1 0 000 2h6v2H1a1 1 0 00-1 1v2a1 1 0 001 1h14a1 1 0 001-1v-2a1 1 0 00-1-1H9V9h6a1 1 0 100-2H9V3.414h-.003V3.41l1.29 1.29c.179.18.429.29.699.29a1.003 1.003 0 00.71-1.71L8.696.29z"];
+//# sourceMappingURL=bring-forward.js.map

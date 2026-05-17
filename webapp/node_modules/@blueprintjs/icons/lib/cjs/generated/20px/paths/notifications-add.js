@@ -1,0 +1,4 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.default = ["M12.003 2.371A3.07 3.07 0 0012 2.5a3 3 0 100 6 3 3 0 004 2.83V14c0 .55.45 1 1 1s1 .45 1 1-.45 1-1 1H3c-.55 0-1-.45-1-1s.45-1 1-1 1-.45 1-1V8c0-2.61 1.67-4.81 4-5.63V2c0-1.1.9-2 2-2s2 .9 2 2v.37l.003.001zM12 18c0 1.1-.9 2-2 2s-2-.9-2-2h4zm2-15.5a1 1 0 112 0v2h2a1 1 0 110 2h-2v2a1 1 0 11-2 0v-2h-2a1 1 0 110-2h2v-2z"];
+//# sourceMappingURL=notifications-add.js.map

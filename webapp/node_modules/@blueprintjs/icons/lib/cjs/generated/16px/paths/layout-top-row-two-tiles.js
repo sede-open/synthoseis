@@ -1,0 +1,4 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.default = ["M10 7a1 1 0 01-1-1V1a1 1 0 011-1h5a1 1 0 011 1v5a1 1 0 01-1 1h-5zM1 7a1 1 0 01-1-1V1a1 1 0 011-1h5a1 1 0 011 1v5a1 1 0 01-1 1H1zM1 16a1 1 0 01-1-1v-5a1 1 0 011-1h14a1 1 0 011 1v5a1 1 0 01-1 1H1z"];
+//# sourceMappingURL=layout-top-row-two-tiles.js.map

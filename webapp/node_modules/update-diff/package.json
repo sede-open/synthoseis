@@ -1,0 +1,33 @@
+{
+  "name": "update-diff",
+  "version": "1.1.0",
+  "description": "Update object by mapping diff properties",
+  "main": "index.js",
+  "scripts": {
+    "test": "node test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dfcreative/update-diff.git"
+  },
+  "keywords": [
+    "update-diff",
+    "map",
+    "map-obj",
+    "object-filter",
+    "map-object",
+    "update",
+    "diff",
+    "difference",
+    "patch",
+    "object",
+    "compare",
+    "change"
+  ],
+  "author": "Dima Yv <df.creative@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/dfcreative/update-diff/issues"
+  },
+  "homepage": "https://github.com/dfcreative/update-diff#readme"
+}

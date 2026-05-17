@@ -1,0 +1,36 @@
+{
+  "name": "color-parse",
+  "version": "2.0.2",
+  "description": "Color string parser",
+  "main": "index.js",
+  "browser": "index.js",
+  "module": "./index.js",
+  "type": "module",
+  "scripts": {
+    "test": "node test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/colorjs/color-parse"
+  },
+  "keywords": [
+    "color",
+    "parse",
+    "color-parse",
+    "color-string",
+    "parse-color",
+    "css color"
+  ],
+  "author": "Dmitry Ivanov <df.creative@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/colorjs/color-parse/issues"
+  },
+  "homepage": "https://github.com/colorjs/color-parse",
+  "dependencies": {
+    "color-name": "^2.0.0"
+  },
+  "devDependencies": {
+    "tape": "^4.7.0"
+  }
+}

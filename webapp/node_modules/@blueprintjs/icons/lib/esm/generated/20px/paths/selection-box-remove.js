@@ -1,0 +1,2 @@
+export default ["M5 0v2H2v3H0V1a1 1 0 011-1h4zm13 18v-3h2v4a1 1 0 01-1 1h-4v-2h3zM0 15v4a1 1 0 001 1h4v-2H2v-3H0zM15 0v2h3v3h2V1a1 1 0 00-1-1h-4zm-3 0H8v2h4V0zM0 8v4h2V8H0zm20 4h-2V8h2v4zM8 20v-2h4v2H8zM6.001 11.007a1 1 0 110-2h8a1 1 0 010 2h-8z"];
+//# sourceMappingURL=selection-box-remove.js.map

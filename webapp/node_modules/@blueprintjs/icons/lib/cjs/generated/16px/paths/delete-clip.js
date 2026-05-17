@@ -1,0 +1,4 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.default = ["M15.707.293a1 1 0 010 1.414L13.914 3.5l1.793 1.793a1 1 0 01-1.414 1.414L12.5 4.914l-1.793 1.793a1 1 0 01-1.414-1.414L11.086 3.5 9.293 1.707A1 1 0 1110.707.293L12.5 2.086 14.293.293a1 1 0 011.414 0zM0 4a1 1 0 011-1h3.5a1 1 0 010 2H2v2a1 1 0 01-2 0V4zm1 12a1 1 0 01-1-1v-3a1 1 0 112 0v2h2.5a1 1 0 110 2H1zm11 0a1 1 0 001-1v-3a1 1 0 10-2 0v2H9a1 1 0 100 2h3zM9 9.5a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"];
+//# sourceMappingURL=delete-clip.js.map

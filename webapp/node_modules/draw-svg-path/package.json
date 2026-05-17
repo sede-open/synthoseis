@@ -1,0 +1,24 @@
+{
+  "name": "draw-svg-path",
+  "version": "1.0.0",
+  "description": "Draws an SVG path onto a canvas context.",
+  "main": "index.js",
+  "dependencies": {
+    "abs-svg-path": "~0.1.1",
+    "normalize-svg-path": "~0.1.0"
+  },
+  "scripts": {
+    "test": "tape test/*.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:michaelrhodes/draw-svg-path.git"
+  },
+  "keywords": ["svg", "path", "canvas"],
+  "author": "Michael Rhodes",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/michaelrhodes/draw-svg-path/issues"
+  },
+  "homepage": "https://github.com/michaelrhodes/draw-svg-path" 
+}

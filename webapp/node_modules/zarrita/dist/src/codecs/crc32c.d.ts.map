@@ -1,0 +1,1 @@
+{"version":3,"file":"crc32c.d.ts","sourceRoot":"","sources":["../../../src/codecs/crc32c.ts"],"names":[],"mappings":"AAEA,qBAAa,WAAW;IACvB,QAAQ,CAAC,IAAI,oBAAoB;IACjC,MAAM,CAAC,UAAU,gBAEhB;IACD,MAAM,sBAAiC;IACvC,MAAM,CAAC,GAAG,EAAE,UAAU,GAAG,UAAU,CAElC;IACD,kBAAkB,CAAC,WAAW,EAAE,MAAM,GAAG,MAAM,CAE9C;CACD"}

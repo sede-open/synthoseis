@@ -1,0 +1,2 @@
+export default ["M7 9a1 1 0 00-1 1v5a1 1 0 001 1h2a1 1 0 001-1v-5a1 1 0 00-1-1H7zM1 9a1 1 0 00-1 1v5a1 1 0 001 1h2a1 1 0 001-1v-5a1 1 0 00-1-1H1zM13 9a1 1 0 00-1 1v5a1 1 0 001 1h2a1 1 0 001-1v-5a1 1 0 00-1-1h-2zM1 0a1 1 0 00-1 1v5a1 1 0 001 1h14a1 1 0 001-1V1a1 1 0 00-1-1H1z"];
+//# sourceMappingURL=layout-bottom-row-three-tiles.js.map

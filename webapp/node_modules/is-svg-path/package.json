@@ -1,0 +1,23 @@
+{
+  "name": "is-svg-path",
+  "version": "1.0.2",
+  "description": "Detect if string an SVG path",
+  "main": "index.js",
+  "scripts": {
+    "test": "node test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dfcreative/is-svg-path.git"
+  },
+  "keywords": [
+    "svg",
+    "path"
+  ],
+  "author": "Dima Yv <dfcreative@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/dfcreative/is-svg-path/issues"
+  },
+  "homepage": "https://github.com/dfcreative/is-svg-path#readme"
+}

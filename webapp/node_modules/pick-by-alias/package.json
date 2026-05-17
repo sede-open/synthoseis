@@ -1,0 +1,26 @@
+{
+  "name": "pick-by-alias",
+  "version": "1.2.0",
+  "description": "Pick properties by aliases",
+  "main": "index.js",
+  "scripts": {
+    "test": "node test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/dfcreative/pick-by-alias.git"
+  },
+  "keywords": [
+    "pick",
+    "object"
+  ],
+  "author": "Dima Yv <dfcreative@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/dfcreative/pick-by-alias/issues"
+  },
+  "homepage": "https://github.com/dfcreative/pick-by-alias#readme",
+  "devDependencies": {
+    "tape": "^4.8.0"
+  }
+}

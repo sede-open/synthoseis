@@ -1,0 +1,34 @@
+{
+    "name": "@types/mapbox__vector-tile",
+    "version": "1.3.4",
+    "description": "TypeScript definitions for @mapbox/vector-tile",
+    "homepage": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/mapbox__vector-tile",
+    "license": "MIT",
+    "contributors": [
+        {
+            "name": "Mathieu Maes",
+            "githubUsername": "webberig",
+            "url": "https://github.com/webberig"
+        },
+        {
+            "name": "Harel Mazor",
+            "githubUsername": "HarelM",
+            "url": "https://github.com/HarelM"
+        }
+    ],
+    "main": "",
+    "types": "index.d.ts",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
+        "directory": "types/mapbox__vector-tile"
+    },
+    "scripts": {},
+    "dependencies": {
+        "@types/geojson": "*",
+        "@types/mapbox__point-geometry": "*",
+        "@types/pbf": "*"
+    },
+    "typesPublisherContentHash": "138731640195203bf8aeebf1ea024b6a7601e12674dde6bffe6217b1c7861a06",
+    "typeScriptVersion": "4.5"
+}

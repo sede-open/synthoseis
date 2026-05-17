@@ -1,0 +1,4 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.default = ["M1 0a1 1 0 00-1 1v3h2V2h2V0H1zM0 15v-3h2v2h2v2H1a1 1 0 01-1-1zM15 16h-3v-2h2v-2h2v3a1 1 0 01-1 1zM16 1v3h-2V2h-2V0h3a1 1 0 011 1zM8 7l4.5-2.5-4.108-2.407a.823.823 0 00-.76 0L3.57 4.394 8 7zM12.955 5c.026.074.04.153.04.234v4.834a.707.707 0 01-.357.614L8.4 13V7.847L12.955 5zM7.594 7.743L3.04 5c-.026.074-.04.227-.04.308v4.656c0 .254.136.488.356.614L7.594 13V7.743z"];
+//# sourceMappingURL=object-view.js.map

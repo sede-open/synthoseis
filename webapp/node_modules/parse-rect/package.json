@@ -1,0 +1,24 @@
+{
+  "name": "parse-rect",
+  "version": "1.2.0",
+  "description": "Parse any input rectangle format",
+  "main": "index.js",
+  "dependencies": {
+    "pick-by-alias": "^1.2.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "node test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dfcreative/parse-rect.git"
+  },
+  "keywords": [
+    "rect",
+    "rectangle",
+    "parse"
+  ],
+  "author": "Dmitry Yv <dfcreative@gmail.com>",
+  "license": "MIT"
+}

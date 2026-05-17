@@ -1,0 +1,73 @@
+{
+  "name": "@turf/helpers",
+  "version": "7.3.5",
+  "description": "Provides helper functions to create GeoJSON features, like points, lines, or areas on a map.",
+  "author": "Turf Authors",
+  "contributors": [
+    "Tom MacWright <@tmcw>",
+    "Stefano Borghi <@stebogit>",
+    "Denis Carriere <@DenisCarriere>",
+    "William Nordmann <@wnordmann>"
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Turfjs/turf/issues"
+  },
+  "homepage": "https://github.com/Turfjs/turf",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/Turfjs/turf.git"
+  },
+  "funding": "https://opencollective.com/turf",
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "geo",
+    "point",
+    "turf",
+    "geojson"
+  ],
+  "type": "module",
+  "main": "dist/cjs/index.cjs",
+  "module": "dist/esm/index.js",
+  "types": "dist/esm/index.d.ts",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "import": {
+        "types": "./dist/esm/index.d.ts",
+        "default": "./dist/esm/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/index.d.cts",
+        "default": "./dist/cjs/index.cjs"
+      }
+    }
+  },
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "bench": "tsx bench.ts",
+    "build": "tsup --config ../../tsup.config.ts",
+    "test": "pnpm run /test:.*/",
+    "test:tape": "tsx test.ts",
+    "test:types": "tsc --esModuleInterop --module node16 --moduleResolution node16 --noEmit --strict types.ts"
+  },
+  "devDependencies": {
+    "@types/benchmark": "^2.1.5",
+    "@types/tape": "^5.8.1",
+    "benchmark": "^2.1.4",
+    "tape": "^5.9.0",
+    "tsup": "^8.4.0",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "@types/geojson": "^7946.0.10",
+    "tslib": "^2.8.1"
+  },
+  "gitHead": "a33ca387405df72847af00cdf689d3209301a2c1"
+}

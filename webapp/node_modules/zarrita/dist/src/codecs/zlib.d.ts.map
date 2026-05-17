@@ -1,0 +1,1 @@
+{"version":3,"file":"zlib.d.ts","sourceRoot":"","sources":["../../../src/codecs/zlib.ts"],"names":[],"mappings":"AAGA,UAAU,eAAe;IACxB,KAAK,EAAE,MAAM,CAAC;CACd;AAED,qBAAa,SAAS;IACrB,IAAI,SAAoB;IAExB,MAAM,CAAC,UAAU,CAAC,CAAC,EAAE,eAAe,aAEnC;IAED,MAAM,sBAA+B;IAE/B,MAAM,CAAC,KAAK,EAAE,UAAU,GAAG,OAAO,CAAC,UAAU,CAAC,CAGnD;CACD"}

@@ -1,0 +1,90 @@
+{
+  "name": "@turf/meta",
+  "version": "7.3.5",
+  "description": "Provides tools for iterating over and manipulating GeoJSON objects.",
+  "author": "Turf Authors",
+  "contributors": [
+    "Tom MacWright <@tmcw>",
+    "Daniel Pulido <@dpmcmlxxvi>",
+    "Denis Carriere <@DenisCarriere>"
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Turfjs/turf/issues"
+  },
+  "homepage": "https://github.com/Turfjs/turf",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/Turfjs/turf.git"
+  },
+  "funding": "https://opencollective.com/turf",
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "functional",
+    "programming",
+    "turfjs",
+    "geojson",
+    "meta",
+    "flattenEach",
+    "flattenReduce",
+    "segmentEach",
+    "segmentReduce",
+    "coordEach",
+    "coordReduce",
+    "propEach",
+    "propReduce",
+    "featureEach",
+    "featureReduce",
+    "coordAll",
+    "geomEach",
+    "geomReduce",
+    "lineEeach",
+    "lineReduce"
+  ],
+  "type": "module",
+  "main": "dist/cjs/index.cjs",
+  "module": "dist/esm/index.js",
+  "types": "dist/esm/index.d.ts",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "import": {
+        "types": "./dist/esm/index.d.ts",
+        "default": "./dist/esm/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/index.d.cts",
+        "default": "./dist/cjs/index.cjs"
+      }
+    }
+  },
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "bench": "tsx bench.ts",
+    "build": "tsup --config ../../tsup.config.ts",
+    "test": "pnpm run /test:.*/",
+    "test:tape": "tsx test.ts",
+    "test:types": "tsc --esModuleInterop --module node16 --moduleResolution node16 --noEmit --strict types.ts"
+  },
+  "devDependencies": {
+    "@turf/random": "7.3.5",
+    "@types/benchmark": "^2.1.5",
+    "@types/tape": "^5.8.1",
+    "benchmark": "^2.1.4",
+    "tape": "^5.9.0",
+    "tsup": "^8.4.0",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "@turf/helpers": "7.3.5",
+    "@types/geojson": "^7946.0.10",
+    "tslib": "^2.8.1"
+  },
+  "gitHead": "a33ca387405df72847af00cdf689d3209301a2c1"
+}

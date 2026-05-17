@@ -1,0 +1,30 @@
+{
+    "name": "@types/mapbox__point-geometry",
+    "version": "0.1.4",
+    "description": "TypeScript definitions for @mapbox/point-geometry",
+    "homepage": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/mapbox__point-geometry",
+    "license": "MIT",
+    "contributors": [
+        {
+            "name": "Mathieu Maes",
+            "githubUsername": "webberig",
+            "url": "https://github.com/webberig"
+        },
+        {
+            "name": "Harel Mazor",
+            "githubUsername": "HarelM",
+            "url": "https://github.com/HarelM"
+        }
+    ],
+    "main": "",
+    "types": "index.d.ts",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
+        "directory": "types/mapbox__point-geometry"
+    },
+    "scripts": {},
+    "dependencies": {},
+    "typesPublisherContentHash": "dc051c2b80a364ad66ea61d47774d79c3f681caba1ccfbb770da77909f64ea24",
+    "typeScriptVersion": "4.5"
+}

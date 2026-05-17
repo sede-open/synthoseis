@@ -1,0 +1,42 @@
+{
+  "name": "svg-path-sdf",
+  "version": "1.1.3",
+  "description": "Get signed distance field for a svg path",
+  "main": "index.js",
+  "scripts": {
+    "test": "budo test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dy/svg-path-sdf.git"
+  },
+  "keywords": [
+    "sdf",
+    "svg",
+    "path",
+    "signed",
+    "distance",
+    "webgl",
+    "gl",
+    "stackgl"
+  ],
+  "author": "Dima Yv <df.creative@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/dy/svg-path-sdf/issues"
+  },
+  "homepage": "https://github.com/dy/svg-path-sdf#readme",
+  "dependencies": {
+    "bitmap-sdf": "^1.0.0",
+    "draw-svg-path": "^1.0.0",
+    "is-svg-path": "^1.0.1",
+    "parse-svg-path": "^0.1.2",
+    "svg-path-bounds": "^1.0.1"
+  },
+  "devDependencies": {
+    "bubleify": "^1.2.0",
+    "enable-mobile": "^1.0.7",
+    "insert-styles": "^1.2.1",
+    "round-to": "^2.0.0"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "name": "plotly.js-dist-min",
+  "version": "2.35.3",
+  "description": "Ready-to-use minified plotly.js distributed bundle.",
+  "license": "MIT",
+  "main": "plotly.min.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/plotly/plotly.js.git"
+  },
+  "bugs": {
+    "url": "https://github.com/plotly/plotly.js/issues"
+  },
+  "author": "Plotly, Inc.",
+  "keywords": [
+    "graphing",
+    "plotting",
+    "data",
+    "visualization",
+    "plotly"
+  ],
+  "files": [
+    "LICENSE",
+    "README.md",
+    "plotly.min.js"
+  ]
+}

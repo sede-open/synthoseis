@@ -1,0 +1,4 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.default = ["M10 6a4 4 0 100 8 4 4 0 100-8z"];
+//# sourceMappingURL=dot.js.map

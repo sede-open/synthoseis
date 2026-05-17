@@ -1,0 +1,27 @@
+{
+  "name": "elementary-circuits-directed-graph",
+  "version": "1.3.1",
+  "description": "Finds all elementary circuits of a directed graph using Johnson's algorithm (1975)",
+  "main": "johnson.js",
+  "scripts": {
+    "test": "tape test/*.js",
+    "lint": "eslint ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/antoinerg/elementary-circuits-directed-graph.git"
+  },
+  "author": "Antoine Roy-Gobeil",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/antoinerg/elementary-circuits-directed-graph/issues"
+  },
+  "homepage": "https://github.com/antoinerg/elementary-circuits-directed-graph#readme",
+  "dependencies": {
+    "strongly-connected-components": "^1.0.1"
+  },
+  "devDependencies": {
+    "eslint": "^5.13.0",
+    "tape": "^4.9.2"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "name": "is-firefox",
+  "version": "1.0.3",
+  "description": "Check if browser is Firefox",
+  "license": "MIT",
+  "repository": "gillstrom/is-firefox",
+  "author": {
+    "name": "Andreas Gillström",
+    "email": "andreasgillstrom@gmail.com",
+    "url": "github.com/gillstrom"
+  },
+  "engines": {
+    "node": ">=0.10.0"
+  },
+  "files": [
+    "index.js"
+  ],
+  "keywords": [
+    "browser",
+    "check",
+    "detect",
+    "ff",
+    "firefox",
+    "mozilla"
+  ]
+}
