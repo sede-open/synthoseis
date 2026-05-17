@@ -18,6 +18,10 @@ export default function RunViewer({ folderId }: RunViewerProps): React.ReactElem
   const [selectedVolume, setSelectedVolume] = React.useState<VolumeInfo | null>(null);
   const [sliceType, setSliceType] = React.useState<"inline" | "crossline" | "timeslice">("inline");
   const [sliceIndex, setSliceIndex] = React.useState(0);
+  // crosslineDraft tracks the visual thumb position during drag without triggering zarr fetches.
+  const [crosslineDraft, setCrosslineDraft] = React.useState(0);
+  // Sync draft when sliceIndex resets externally (e.g. volume switch).
+  React.useEffect(() => { setCrosslineDraft(sliceIndex); }, [sliceIndex]);
   const [colormap, setColormap] = React.useState("RdBu");
 
   const entry: ManifestEntry | undefined = React.useMemo(() => {
@@ -179,12 +183,13 @@ export default function RunViewer({ folderId }: RunViewerProps): React.ReactElem
             type="range"
             min={0}
             max={sliderMax}
-            value={sliceIndex}
-            // Crossline: only fire on mouseUp to avoid flooding HTTP
-            onChange={
-              sliceType !== "crossline"
-                ? (e) => setSliceIndex(Number(e.target.value))
-                : undefined
+            value={sliceType === "crossline" ? crosslineDraft : sliceIndex}
+            // Crossline: update draft on every change (smooth thumb) but only
+            // commit to sliceIndex (triggering zarr fetch) on mouseUp/touchEnd.
+            onChange={(e) =>
+              sliceType === "crossline"
+                ? setCrosslineDraft(Number(e.target.value))
+                : setSliceIndex(Number(e.target.value))
             }
             onMouseUp={(e) =>
               sliceType === "crossline" &&

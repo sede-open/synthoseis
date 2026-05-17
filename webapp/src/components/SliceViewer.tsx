@@ -1,6 +1,10 @@
 import React from "react";
 import { NonIdealState, Spinner } from "@blueprintjs/core";
-import Plot from "react-plotly.js";
+import createPlotlyComponent from "react-plotly.js/factory";
+// plotly.js-dist-min is externalised (loaded from CDN in index.html).
+// The factory pattern binds react-plotly.js to the window.Plotly global.
+declare const Plotly: Parameters<typeof createPlotlyComponent>[0];
+const Plot = createPlotlyComponent(Plotly);
 import type { VolumeInfo } from "../types/manifest";
 import useZarrSlice from "../hooks/useZarrSlice";
 

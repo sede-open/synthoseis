@@ -6,11 +6,15 @@ export default defineConfig({
   plugins: [react()],
   build: {
     rollupOptions: {
+      // Externalise Plotly: loaded from CDN in index.html, not bundled.
+      external: ["plotly.js-dist-min"],
       output: {
+        globals: {
+          "plotly.js-dist-min": "Plotly",
+        },
         manualChunks: {
           react: ["react", "react-dom"],
           blueprint: ["@blueprintjs/core", "@blueprintjs/select"],
-          plotly: ["react-plotly.js", "plotly.js-dist-min"],
         },
       },
     },
