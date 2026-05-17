@@ -108,8 +108,9 @@ def test_get_models_returns_list(client):
 def test_get_models_includes_example(client):
     resp = client.get("/api/models")
     assert resp.status_code == 200
-    # "example" RPM should be discoverable
-    assert "example" in resp.json()
+    # "rpm_example" RPM should be discoverable (file is rockphysics/rpm_example.py)
+    models = resp.json()
+    assert any("example" in m for m in models), f"No example model found in {models}"
 
 
 # ---------------------------------------------------------------------------
@@ -269,7 +270,7 @@ def test_logs_endpoint_returns_event_stream_content_type(client, monkeypatch, tm
         yield ": heartbeat\n\n"
         yield "event: status\ndata: COMPLETE\n\n"
 
-    monkeypatch.setattr(rm, "stream_logs", fake_stream)
+    monkeypatch.setattr("api.main.stream_logs", fake_stream)
 
     with client.stream("GET", f"/api/runs/{run_id}/logs") as resp:
         assert resp.status_code == 200
@@ -289,7 +290,8 @@ def test_logs_endpoint_sends_heartbeat(client, monkeypatch, tmp_path):
         yield ": heartbeat\n\n"
         yield "event: status\ndata: COMPLETE\n\n"
 
-    monkeypatch.setattr(rm, "stream_logs", fake_stream)
+    # Must patch api.main.stream_logs since main.py imports it directly
+    monkeypatch.setattr("api.main.stream_logs", fake_stream)
 
     with client.stream("GET", f"/api/runs/{run_id}/logs") as resp:
         content = b""
