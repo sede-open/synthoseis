@@ -31,8 +31,22 @@ export default function RunViewer({ folderId }: RunViewerProps): React.ReactElem
   const [crosslineDraft, setCrosslineDraft] = React.useState(0);
   // Sync draft when sliceIndex resets externally (e.g. volume switch).
   React.useEffect(() => { setCrosslineDraft(sliceIndex); }, [sliceIndex]);
-  const [colormap, setColormap] = React.useState("Seismic");
-  const [colormapReversed, setColormapReversed] = React.useState(false);
+  const [colormap, setColormap] = React.useState<string>(() => {
+    try { return localStorage.getItem("synthoseis_colormap") ?? "seismics"; } catch { return "seismics"; }
+  });
+  const [colormapReversed, setColormapReversed] = React.useState<boolean>(() => {
+    try { return localStorage.getItem("synthoseis_colormap_reversed") === "true"; } catch { return false; }
+  });
+
+  // Persist colormap selection to localStorage
+  const handleColormapChange = (value: string) => {
+    setColormap(value);
+    try { localStorage.setItem("synthoseis_colormap", value); } catch { /* ignore */ }
+  };
+  const handleReversedChange = (value: boolean) => {
+    setColormapReversed(value);
+    try { localStorage.setItem("synthoseis_colormap_reversed", String(value)); } catch { /* ignore */ }
+  };
 
   const entry: ManifestEntry | undefined = React.useMemo(() => {
     if (!manifest) return undefined;
@@ -40,12 +54,10 @@ export default function RunViewer({ folderId }: RunViewerProps): React.ReactElem
     return manifest.find((e) => e.folder === folderId) ?? manifest[0];
   }, [manifest, folderId]);
 
-  // Auto-select first volume and colormap when entry changes
+  // Auto-select first volume when entry loads
   React.useEffect(() => {
     if (entry && entry.volumes.length > 0) {
-      const vol = entry.volumes[0];
-      setSelectedVolume(vol);
-      setColormap(colormapForGroup(vol.group));
+      setSelectedVolume(entry.volumes[0]);
       setSliceIndex(0);
     }
   }, [entry]);
@@ -55,10 +67,9 @@ export default function RunViewer({ folderId }: RunViewerProps): React.ReactElem
     setSliceIndex(0);
   }, [selectedVolume, sliceType]);
 
-  // Update colormap when volume changes
+  // Update selected volume (no colormap reset — user keeps their choice)
   const handleVolumeChange = (vol: VolumeInfo) => {
     setSelectedVolume(vol);
-    setColormap(colormapForGroup(vol.group));
     setSliceIndex(0);
   };
 
@@ -160,9 +171,9 @@ export default function RunViewer({ folderId }: RunViewerProps): React.ReactElem
           </label>
           <ColormapSelector
             value={colormap}
-            onChange={setColormap}
+            onChange={handleColormapChange}
             reversed={colormapReversed}
-            onReverseChange={setColormapReversed}
+            onReverseChange={handleReversedChange}
           />
         </div>
       </div>

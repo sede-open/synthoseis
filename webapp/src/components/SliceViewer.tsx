@@ -76,8 +76,7 @@ export default function SliceViewer({
         {
           type: "heatmapgl",
           z,
-          colorscale: resolveColorscale(colormap),
-          reversescale: reversed,
+          colorscale: resolveColorscale(colormap, reversed),
           showscale: true,
           hoverinfo: "z",
         } as Plotly.Data,
