@@ -66,6 +66,17 @@ export default function SliceViewer({
     z.push(row);
   }
 
+  // Symmetric colour range: find the largest absolute value in the slice so
+  // that 0 always maps to the centre of the colormap (standard seismic display).
+  // isFinite guard skips any NaN/Infinity samples that would corrupt the range.
+  let absMax = 0;
+  for (let i = 0; i < data.length; i++) {
+    const a = Math.abs(data[i]);
+    if (isFinite(a) && a > absMax) absMax = a;
+  }
+  // Guard against an all-zero slice — fall back to ±1 so the plot is still visible.
+  if (absMax === 0) absMax = 1;
+
   // y-axis autorange "reversed" puts index 0 at the top so depth/time
   // values increase downward, matching standard seismic display convention.
   const isTimeslice = sliceType === "timeslice";
@@ -77,6 +88,8 @@ export default function SliceViewer({
           type: "heatmapgl",
           z,
           colorscale: resolveColorscale(colormap, reversed),
+          zmin: -absMax,
+          zmax: absMax,
           showscale: true,
           hoverinfo: "z",
         } as Plotly.Data,

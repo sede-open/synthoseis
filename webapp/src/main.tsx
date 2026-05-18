@@ -10,6 +10,9 @@ import App from "./App";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import "@blueprintjs/icons/lib/css/blueprint-icons.css";
 import "@blueprintjs/select/lib/css/blueprint-select.css";
+// Global baseline: sets dark background-color on body/html so areas not
+// covered by Blueprint components don't show through as white.
+import "./index.css";
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>

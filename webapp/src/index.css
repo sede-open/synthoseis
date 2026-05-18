@@ -1,0 +1,33 @@
+/*
+ * Global baseline styles for Synthoseis Dashboard.
+ *
+ * Blueprint v5 (.bp5-dark) sets text colour and color-scheme but does NOT set
+ * a background-colour on <body>, so unstyled areas render white against dark
+ * Blueprint components — making text unreadable.  This file fills that gap.
+ *
+ * Colour values match Blueprint v5's dark-theme design tokens:
+ *   --app-background:  #1C2127  (Dark Gray 1)
+ *   --text-primary:    #F6F7F9  (Light Gray 5)
+ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  /* Dark background — prevents white flash and fills gaps between components */
+  background-color: #1c2127;
+  /* Default text colour for anything not already styled by Blueprint */
+  color: #f6f7f9;
+}
+
+/* Ensure the React root fills at least the full viewport height */
+#root {
+  min-height: 100vh;
+  background-color: #1c2127;
+}

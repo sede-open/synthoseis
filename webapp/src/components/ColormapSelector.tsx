@@ -19,9 +19,13 @@ const RDBU_CS: [number, string][] = [
   [1.0,   "rgb(103,0,31)"],
 ];
 
-/** seismics (ODT) — dark red → orange → pale → grey-blue → black */
+/**
+ * seismics (ODT) — dark red → orange → pale → grey-blue → black.
+ * Stop at 0.500 is pure white, pinned exactly at the zero-amplitude position
+ * so that symmetric zmin/zmax always renders zero as white.
+ */
 const SEISMICS_CS: [number, string][] = [
-  [0.0,   "rgb(170,0,0)"],
+  [0.000, "rgb(170,0,0)"],
   [0.032, "rgb(184,10,0)"],
   [0.065, "rgb(199,26,0)"],
   [0.097, "rgb(214,46,0)"],
@@ -36,8 +40,7 @@ const SEISMICS_CS: [number, string][] = [
   [0.387, "rgb(254,212,87)"],
   [0.419, "rgb(251,220,135)"],
   [0.452, "rgb(248,230,181)"],
-  [0.484, "rgb(246,237,212)"],
-  [0.516, "rgb(240,240,238)"],
+  [0.500, "rgb(255,255,255)"],  // zero = pure white (was split across 0.484/0.516)
   [0.548, "rgb(236,236,239)"],
   [0.565, "rgb(232,232,236)"],
   [0.581, "rgb(219,220,229)"],
@@ -52,68 +55,75 @@ const SEISMICS_CS: [number, string][] = [
   [0.871, "rgb(40,43,77)"],
   [0.903, "rgb(25,26,55)"],
   [0.935, "rgb(12,12,30)"],
-  [1.0,   "rgb(0,0,0)"],
+  [1.000, "rgb(0,0,0)"],
 ];
 
-/** petrel (ODT) — cyan → blue-grey → warm grey → brown → olive-yellow */
-const PETREL_CS: [number, string][] = [
-  [0.0,   "rgb(161,255,255)"],
-  [0.032, "rgb(152,233,251)"],
-  [0.065, "rgb(143,213,245)"],
-  [0.097, "rgb(135,194,240)"],
-  [0.129, "rgb(127,177,234)"],
-  [0.161, "rgb(119,161,228)"],
-  [0.194, "rgb(112,146,221)"],
-  [0.226, "rgb(104,131,212)"],
-  [0.258, "rgb(104,120,207)"],
-  [0.290, "rgb(103,110,200)"],
-  [0.323, "rgb(104,96,183)"],
-  [0.355, "rgb(105,92,175)"],
-  [0.387, "rgb(107,95,165)"],
-  [0.419, "rgb(110,95,159)"],
-  [0.452, "rgb(116,99,150)"],
-  [0.484, "rgb(126,108,148)"],
-  [0.516, "rgb(143,132,157)"],
-  [0.548, "rgb(162,153,164)"],
-  [0.565, "rgb(182,176,178)"],
-  [0.581, "rgb(198,193,192)"],
-  [0.613, "rgb(190,178,172)"],
-  [0.645, "rgb(182,161,153)"],
-  [0.677, "rgb(172,142,128)"],
-  [0.710, "rgb(162,117,99)"],
-  [0.742, "rgb(162,93,68)"],
-  [0.774, "rgb(162,84,54)"],
-  [0.806, "rgb(163,79,47)"],
-  [0.839, "rgb(172,100,31)"],
-  [0.871, "rgb(186,112,16)"],
-  [0.903, "rgb(209,147,2)"],
-  [0.935, "rgb(235,197,0)"],
-  [1.0,   "rgb(255,255,0)"],
+/** Gray — black → mid-grey → white.  Reverse for white-to-black. */
+const GRAY_CS: [number, string][] = [
+  [0.0, "rgb(0,0,0)"],
+  [0.5, "rgb(128,128,128)"],
+  [1.0, "rgb(255,255,255)"],
 ];
 
-export const COLORSCALE_MAP: Record<string, string | [number, string][]> = {
+/**
+ * Viridis — explicit stops so heatmapgl (WebGL) renders it correctly.
+ * Named-string colorscales are not reliably honoured by heatmapgl.
+ * Values sampled from the canonical matplotlib Viridis LUT.
+ */
+const VIRIDIS_CS: [number, string][] = [
+  [0.0,  "rgb(68,1,84)"],
+  [0.1,  "rgb(72,29,111)"],
+  [0.2,  "rgb(64,68,135)"],
+  [0.3,  "rgb(52,95,141)"],
+  [0.4,  "rgb(41,121,142)"],
+  [0.5,  "rgb(32,146,140)"],
+  [0.6,  "rgb(34,168,132)"],
+  [0.7,  "rgb(70,190,112)"],
+  [0.8,  "rgb(122,209,81)"],
+  [0.9,  "rgb(190,222,44)"],
+  [1.0,  "rgb(253,231,37)"],
+];
+
+/**
+ * Magma — explicit stops for the same reason as Viridis.
+ * Values sampled from the canonical matplotlib Magma LUT.
+ */
+const MAGMA_CS: [number, string][] = [
+  [0.0,  "rgb(0,0,4)"],
+  [0.1,  "rgb(21,11,53)"],
+  [0.2,  "rgb(59,15,112)"],
+  [0.3,  "rgb(99,26,128)"],
+  [0.4,  "rgb(140,41,129)"],
+  [0.5,  "rgb(183,55,121)"],
+  [0.6,  "rgb(221,81,100)"],
+  [0.7,  "rgb(248,125,81)"],
+  [0.8,  "rgb(254,174,97)"],
+  [0.9,  "rgb(254,220,135)"],
+  [1.0,  "rgb(252,253,191)"],
+];
+
+export const COLORSCALE_MAP: Record<string, [number, string][]> = {
   RdBu:     RDBU_CS,
   seismics: SEISMICS_CS,
-  petrel:   PETREL_CS,
-  Viridis:  "Viridis",
-  Magma:    "Magma",
+  gray:     GRAY_CS,
+  Viridis:  VIRIDIS_CS,
+  Magma:    MAGMA_CS,
 };
 
 /**
  * Resolve a colormap key to the Plotly colorscale value.
  * Reversal is baked in so that Plotly receives a new `colorscale` reference
  * and re-renders immediately (heatmapgl ignores `reversescale` updates).
+ * All entries are explicit arrays — named strings are intentionally avoided
+ * because heatmapgl (WebGL) does not reliably honour them.
  */
 export function resolveColorscale(
   key: string,
   reversed: boolean,
-): string | [number, string][] {
-  const cs = COLORSCALE_MAP[key] ?? key;
+): [number, string][] {
+  const cs = COLORSCALE_MAP[key] ?? COLORSCALE_MAP["seismics"];
   if (!reversed) return cs;
 
-  if (typeof cs === "string") {
-    return cs.endsWith("_r") ? cs.slice(0, -2) : `${cs}_r`;
-  }
   const rev = [...cs].reverse();
   return rev.map(([, color], i) => [
     i / (rev.length - 1),
@@ -146,14 +156,14 @@ interface CategoryHeader {
 type SelectItem = ColormapOption | CategoryHeader;
 
 const ALL_ITEMS: SelectItem[] = [
-  { value: "__div__",      label: "Diverging",      category: "Diverging",   isHeader: true },
-  { value: "RdBu",         label: "RdBu",           category: "Diverging"  },
-  { value: "__seismic__",  label: "Seismic (ODT)",  category: "Seismic",     isHeader: true },
-  { value: "seismics",     label: "seismics",       category: "Seismic"    },
-  { value: "petrel",       label: "petrel",         category: "Seismic"    },
-  { value: "__seq__",      label: "Sequential",     category: "Sequential",  isHeader: true },
-  { value: "Viridis",      label: "Viridis",        category: "Sequential" },
-  { value: "Magma",        label: "Magma",          category: "Sequential" },
+  { value: "__div__",     label: "Diverging",     category: "Diverging",  isHeader: true },
+  { value: "RdBu",        label: "RdBu",          category: "Diverging"  },
+  { value: "__seis__",    label: "Seismic (ODT)", category: "Seismic",    isHeader: true },
+  { value: "seismics",    label: "seismics",      category: "Seismic"    },
+  { value: "gray",        label: "Gray",          category: "Seismic"    },
+  { value: "__seq__",     label: "Sequential",    category: "Sequential", isHeader: true },
+  { value: "Viridis",     label: "Viridis",       category: "Sequential" },
+  { value: "Magma",       label: "Magma",         category: "Sequential" },
 ];
 
 const OPTIONS: ColormapOption[] = ALL_ITEMS.filter(
