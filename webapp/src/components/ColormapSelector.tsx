@@ -1,68 +1,22 @@
 import React from "react";
-import { Checkbox, HTMLSelect } from "@blueprintjs/core";
+import { Button, Checkbox, MenuDivider, MenuItem } from "@blueprintjs/core";
+import { Select } from "@blueprintjs/select";
 
 // ---------------------------------------------------------------------------
-// Colormaps from https://github.com/lperozzi/Seismic_colormaps
+// Colorscale definitions
 // ---------------------------------------------------------------------------
 
-/** yrwbc — Yellow → Red → White → Blue → Cyan */
-const YRWBC_CS: [number, string][] = [
-  [0.0, "rgb(255,255,0)"],
-  [0.032, "rgb(255,204,0)"],
-  [0.065, "rgb(255,153,0)"],
-  [0.097, "rgb(255,102,0)"],
-  [0.129, "rgb(255,51,0)"],
-  [0.161, "rgb(255,1,1)"],
-  [0.194, "rgb(255,51,51)"],
-  [0.226, "rgb(255,102,102)"],
-  [0.258, "rgb(255,153,153)"],
-  [0.290, "rgb(255,204,204)"],
-  [0.323, "rgb(255,255,255)"],
-  [0.355, "rgb(245,245,255)"],
-  [0.387, "rgb(224,224,255)"],
-  [0.419, "rgb(204,204,255)"],
-  [0.452, "rgb(163,163,255)"],
-  [0.484, "rgb(122,122,255)"],
-  [0.516, "rgb(82,82,255)"],
-  [0.548, "rgb(41,41,255)"],
-  [0.581, "rgb(0,0,255)"],
-  [0.613, "rgb(0,26,255)"],
-  [0.645, "rgb(0,51,255)"],
-  [0.677, "rgb(0,89,255)"],
-  [0.710, "rgb(0,128,255)"],
-  [0.742, "rgb(0,166,255)"],
-  [0.774, "rgb(0,204,255)"],
-  [0.806, "rgb(0,230,255)"],
-  [0.839, "rgb(0,255,255)"],
-  [1.0,   "rgb(0,255,255)"],
-];
-
-/** sharp — Yellow → warm white → pale blue → deep blue → cyan */
-const SHARP_CS: [number, string][] = [
-  [0.0,   "rgb(255,255,0)"],
-  [0.032, "rgb(255,191,0)"],
-  [0.065, "rgb(255,128,0)"],
-  [0.097, "rgb(255,64,0)"],
-  [0.129, "rgb(255,128,3)"],
-  [0.161, "rgb(255,166,64)"],
-  [0.194, "rgb(255,204,128)"],
-  [0.226, "rgb(255,230,191)"],
-  [0.258, "rgb(255,255,255)"],
-  [0.290, "rgb(245,245,255)"],
-  [0.323, "rgb(224,224,255)"],
-  [0.355, "rgb(204,204,255)"],
-  [0.387, "rgb(173,173,255)"],
-  [0.419, "rgb(143,143,255)"],
-  [0.452, "rgb(112,112,255)"],
-  [0.484, "rgb(82,82,255)"],
-  [0.516, "rgb(51,51,255)"],
-  [0.548, "rgb(20,20,255)"],
-  [0.581, "rgb(0,10,255)"],
-  [0.613, "rgb(0,51,255)"],
-  [0.645, "rgb(0,102,255)"],
-  [0.677, "rgb(0,153,255)"],
-  [0.710, "rgb(0,204,255)"],
-  [1.0,   "rgb(0,255,255)"],
+/** RdBu with a true symmetric white centre (blue→white→red) */
+const RDBU_CS: [number, string][] = [
+  [0.0,   "rgb(5,48,97)"],
+  [0.125, "rgb(33,102,172)"],
+  [0.25,  "rgb(92,164,220)"],
+  [0.375, "rgb(175,213,240)"],
+  [0.5,   "rgb(255,255,255)"],
+  [0.625, "rgb(245,189,152)"],
+  [0.75,  "rgb(214,96,77)"],
+  [0.875, "rgb(178,24,43)"],
+  [1.0,   "rgb(103,0,31)"],
 ];
 
 /** seismics (ODT) — dark red → orange → pale → grey-blue → black */
@@ -137,25 +91,18 @@ const PETREL_CS: [number, string][] = [
   [1.0,   "rgb(255,255,0)"],
 ];
 
-// ---------------------------------------------------------------------------
-// Map name → Plotly colorscale
-// ---------------------------------------------------------------------------
-
 export const COLORSCALE_MAP: Record<string, string | [number, string][]> = {
-  Seismic:       "RdBu",
-  "Red-White-Blue": "RdBu",
-  Greyscale:     "Greys",
-  yrwbc:         YRWBC_CS,
-  sharp:         SHARP_CS,
-  seismics:      SEISMICS_CS,
-  petrel:        PETREL_CS,
+  RdBu:     RDBU_CS,
+  seismics: SEISMICS_CS,
+  petrel:   PETREL_CS,
+  Viridis:  "Viridis",
+  Magma:    "Magma",
 };
 
 /**
  * Resolve a colormap key to the Plotly colorscale value.
- * When `reversed` is true the array is flipped end-to-end (or the named
- * string becomes the reversed variant). This ensures Plotly always sees a
- * changed `colorscale` value and re-renders immediately.
+ * Reversal is baked in so that Plotly receives a new `colorscale` reference
+ * and re-renders immediately (heatmapgl ignores `reversescale` updates).
  */
 export function resolveColorscale(
   key: string,
@@ -165,32 +112,61 @@ export function resolveColorscale(
   if (!reversed) return cs;
 
   if (typeof cs === "string") {
-    // Plotly named scales support the _r suffix for reversal.
     return cs.endsWith("_r") ? cs.slice(0, -2) : `${cs}_r`;
   }
-  // Custom array: reverse and remap positions 0→1.
   const rev = [...cs].reverse();
-  return rev.map(([, color], i) => [i / (rev.length - 1), color] as [number, string]);
+  return rev.map(([, color], i) => [
+    i / (rev.length - 1),
+    color,
+  ] as [number, string]);
 }
 
 export function colormapForGroup(_group: string): string {
-  // Default for all groups — users choose their preferred colormap.
   return "seismics";
+}
+
+// ---------------------------------------------------------------------------
+// Select item types
+// ---------------------------------------------------------------------------
+
+interface ColormapOption {
+  value: string;
+  label: string;
+  category: string;
+  isHeader?: false;
+}
+
+interface CategoryHeader {
+  value: string;  // used as key — must be unique
+  label: string;
+  category: string;
+  isHeader: true;
+}
+
+type SelectItem = ColormapOption | CategoryHeader;
+
+const ALL_ITEMS: SelectItem[] = [
+  { value: "__div__",      label: "Diverging",      category: "Diverging",   isHeader: true },
+  { value: "RdBu",         label: "RdBu",           category: "Diverging"  },
+  { value: "__seismic__",  label: "Seismic (ODT)",  category: "Seismic",     isHeader: true },
+  { value: "seismics",     label: "seismics",       category: "Seismic"    },
+  { value: "petrel",       label: "petrel",         category: "Seismic"    },
+  { value: "__seq__",      label: "Sequential",     category: "Sequential",  isHeader: true },
+  { value: "Viridis",      label: "Viridis",        category: "Sequential" },
+  { value: "Magma",        label: "Magma",          category: "Sequential" },
+];
+
+const OPTIONS: ColormapOption[] = ALL_ITEMS.filter(
+  (i): i is ColormapOption => !i.isHeader,
+);
+
+function labelForValue(value: string): string {
+  return OPTIONS.find((o) => o.value === value)?.label ?? value;
 }
 
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
-
-const COLORMAPS: { label: string; value: string }[] = [
-  { label: "Seismic (RdBu)",    value: "Seismic"        },
-  { label: "Red-White-Blue",    value: "Red-White-Blue" },
-  { label: "Greyscale",         value: "Greyscale"      },
-  { label: "yrwbc",             value: "yrwbc"          },
-  { label: "sharp",             value: "sharp"          },
-  { label: "seismics (ODT)",    value: "seismics"       },
-  { label: "petrel (ODT)",      value: "petrel"         },
-];
 
 interface ColormapSelectorProps {
   value: string;
@@ -207,16 +183,42 @@ export default function ColormapSelector({
 }: ColormapSelectorProps): React.ReactElement {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-      <HTMLSelect
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
+      <Select<SelectItem>
+        items={ALL_ITEMS}
+        filterable={false}
+        itemDisabled={(item) => !!item.isHeader}
+        itemRenderer={(item, { handleClick, modifiers }) => {
+          if (item.isHeader) {
+            return (
+              <MenuDivider
+                key={item.value}
+                title={item.label}
+              />
+            );
+          }
+          return (
+            <MenuItem
+              key={item.value}
+              text={item.label}
+              active={modifiers.active}
+              disabled={modifiers.disabled}
+              selected={item.value === value}
+              onClick={handleClick}
+            />
+          );
+        }}
+        onItemSelect={(item) => {
+          if (!item.isHeader) onChange(item.value);
+        }}
+        popoverProps={{ minimal: true, placement: "bottom-start" }}
       >
-        {COLORMAPS.map((cm) => (
-          <option key={cm.value} value={cm.value}>
-            {cm.label}
-          </option>
-        ))}
-      </HTMLSelect>
+        <Button
+          text={labelForValue(value)}
+          rightIcon="chevron-down"
+          minimal
+        />
+      </Select>
+
       <Checkbox
         checked={reversed}
         onChange={(e) => onReverseChange((e.target as HTMLInputElement).checked)}
