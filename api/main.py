@@ -71,30 +71,80 @@ def get_models() -> list[str]:
 def browse_directory(initial_dir: str | None = None) -> dict:
     """Open a native OS folder-picker dialog and return the selected path.
 
-    Uses tkinter.filedialog on all platforms (macOS native sheet, Linux GTK,
-    Windows Explorer). Returns {"path": null} if the user cancels.
-    """
-    start = initial_dir or str(pathlib.Path.home())
-    try:
-        import tkinter as tk
-        from tkinter import filedialog
+    Uses platform-native subprocesses — no Python UI toolkit required, so it
+    works correctly from a FastAPI thread on macOS (tkinter crashes with
+    NSInternalInconsistencyException when called off the main thread):
 
-        root = tk.Tk()
-        root.withdraw()          # hide the empty Tk window
-        root.call("wm", "attributes", ".", "-topmost", True)  # dialog on top
-        chosen = filedialog.askdirectory(
-            initialdir=start,
-            title="Select folder",
-            mustexist=False,
+      macOS  : osascript (AppleScript) — always available, no thread restriction
+      Linux  : zenity (GNOME) or kdialog (KDE), whichever is on PATH
+      Windows: PowerShell FolderBrowserDialog
+
+    Returns {"path": "<absolute path>"} or {"path": null} if the user cancels.
+    Raises HTTP 501 if no supported dialog tool is found.
+    """
+    import shutil
+
+    start = str(pathlib.Path(initial_dir).expanduser().resolve()) if initial_dir else str(pathlib.Path.home())
+
+    chosen: str | None = None
+
+    if sys.platform == "darwin":
+        # AppleScript: runs in its own process, no Cocoa main-thread requirement.
+        script = (
+            f'POSIX path of (choose folder '
+            f'with prompt "Select folder" '
+            f'default location POSIX file "{start}")'
         )
-        root.destroy()
-        return {"path": chosen or None}
-    except Exception as exc:
-        # tkinter not available (headless server) — return a helpful error.
+        result = subprocess.run(
+            ["osascript", "-e", script],
+            capture_output=True, text=True
+        )
+        if result.returncode == 0:
+            chosen = result.stdout.strip().rstrip("/") or None
+
+    elif sys.platform.startswith("linux"):
+        if shutil.which("zenity"):
+            result = subprocess.run(
+                ["zenity", "--file-selection", "--directory",
+                 "--title=Select folder", f"--filename={start}/"],
+                capture_output=True, text=True
+            )
+            if result.returncode == 0:
+                chosen = result.stdout.strip() or None
+        elif shutil.which("kdialog"):
+            result = subprocess.run(
+                ["kdialog", "--getexistingdirectory", start],
+                capture_output=True, text=True
+            )
+            if result.returncode == 0:
+                chosen = result.stdout.strip() or None
+        else:
+            raise HTTPException(
+                status_code=501,
+                detail="No folder picker found. Install zenity (GNOME) or kdialog (KDE).",
+            )
+
+    elif sys.platform == "win32":
+        ps_script = (
+            "Add-Type -AssemblyName System.Windows.Forms; "
+            "$f = New-Object System.Windows.Forms.FolderBrowserDialog; "
+            f"$f.SelectedPath = '{start}'; "
+            "if ($f.ShowDialog() -eq 'OK') {{ Write-Output $f.SelectedPath }}"
+        )
+        result = subprocess.run(
+            ["powershell", "-Command", ps_script],
+            capture_output=True, text=True
+        )
+        if result.returncode == 0:
+            chosen = result.stdout.strip() or None
+
+    else:
         raise HTTPException(
             status_code=501,
-            detail=f"Native folder picker unavailable on this system: {exc}",
+            detail=f"Folder picker not supported on platform: {sys.platform}",
         )
+
+    return {"path": chosen}
 
 
 # ---------------------------------------------------------------------------
