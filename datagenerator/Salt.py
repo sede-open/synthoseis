@@ -78,7 +78,8 @@ class SaltModel:
             salt_radius=salt_radius,
         )
 
-    def create_circular_pointcloud(self, cx, cy, cz, radius, verbose=False):
+    @staticmethod
+    def create_circular_pointcloud(cx, cy, cz, radius, rng, verbose=False):
         """
         Create a circular pointcloud
         ----------------------------
@@ -109,14 +110,14 @@ class SaltModel:
             x = (
                 cx
                 + radius * cos(iangle * np.pi / 180.0)
-                + self.rng.uniform(-xy_max_jitter, xy_max_jitter)
+                + rng.uniform(-xy_max_jitter, xy_max_jitter)
             )
             y = (
                 cy
                 + radius * sin(iangle * np.pi / 180.0)
-                + self.rng.uniform(-xy_max_jitter, xy_max_jitter)
+                + rng.uniform(-xy_max_jitter, xy_max_jitter)
             )
-            z = cz + self.rng.uniform(-xy_max_jitter / 2.0, xy_max_jitter / 2.0)
+            z = cz + rng.uniform(-xy_max_jitter / 2.0, xy_max_jitter / 2.0)
             points.append([x, y, z])
             if verbose:
                 if iangle == 0.0:
@@ -162,9 +163,9 @@ class SaltModel:
             f"\n   ...radius_deep, radius_mid, radius_shallow = {r_deep:.2f}, {r_mid:.2f}, {r_shallow:.2f}"
         )
 
-        self.points += self.create_circular_pointcloud(cx, cy, c_deep, r_deep)
-        self.points += self.create_circular_pointcloud(cx, cy, c_mid, r_mid)
-        self.points += self.create_circular_pointcloud(cx, cy, c_shallow, r_shallow)
+        self.points += self.create_circular_pointcloud(cx, cy, c_deep, r_deep, self.rng)
+        self.points += self.create_circular_pointcloud(cx, cy, c_mid, r_mid, self.rng)
+        self.points += self.create_circular_pointcloud(cx, cy, c_shallow, r_shallow, self.rng)
 
         # Add points for the tip
         xy_max_jitter = 0.1 * r_shallow
