@@ -13,15 +13,29 @@ import { browseDirectory } from "../api/client";
 
 const STORAGE_KEY = "synthoseis_project_folder";
 
+/** Regex for a seismic run folder name, e.g. seismic__0517_2351_<uuid> */
+const RUN_FOLDER_RE = /\/seismic__(\d{8}|\d{4}_\d{4})_[^/]+\/?$/;
+
+/**
+ * If the user entered a run subfolder path directly (e.g. …/seismic__0517_…)
+ * strip back to the parent project folder so the manifest scan works correctly.
+ */
+function normaliseFolder(raw: string): string {
+  const trimmed = raw.trim().replace(/\/$/, "");
+  return RUN_FOLDER_RE.test(trimmed)
+    ? trimmed.replace(RUN_FOLDER_RE, "")
+    : trimmed;
+}
+
 export default function ProjectDashboard(): React.ReactElement {
   // ── Folder state (persisted to localStorage) ──────────────────────────────
   const [folderInput, setFolderInput] = React.useState<string>(() => {
-    try { return localStorage.getItem(STORAGE_KEY) ?? ""; } catch { return ""; }
+    try { return normaliseFolder(localStorage.getItem(STORAGE_KEY) ?? ""); } catch { return ""; }
   });
   // The committed folder that actually drives the manifest fetch.
   // Initialised from storage so the last folder auto-loads on page visit.
   const [activeFolder, setActiveFolder] = React.useState<string>(() => {
-    try { return localStorage.getItem(STORAGE_KEY) ?? ""; } catch { return ""; }
+    try { return normaliseFolder(localStorage.getItem(STORAGE_KEY) ?? ""); } catch { return ""; }
   });
   const [browsing, setBrowsing] = React.useState(false);
 
@@ -29,10 +43,11 @@ export default function ProjectDashboard(): React.ReactElement {
 
   // ── Handlers ──────────────────────────────────────────────────────────────
   function handleLoad() {
-    const trimmed = folderInput.trim();
-    setActiveFolder(trimmed);
-    if (trimmed) {
-      localStorage.setItem(STORAGE_KEY, trimmed);
+    const normalised = normaliseFolder(folderInput);
+    setFolderInput(normalised);
+    setActiveFolder(normalised);
+    if (normalised) {
+      localStorage.setItem(STORAGE_KEY, normalised);
     } else {
       localStorage.removeItem(STORAGE_KEY);
     }
@@ -43,9 +58,10 @@ export default function ProjectDashboard(): React.ReactElement {
     try {
       const picked = await browseDirectory(folderInput || undefined);
       if (picked) {
-        setFolderInput(picked);
-        setActiveFolder(picked);
-        localStorage.setItem(STORAGE_KEY, picked);
+        const normalised = normaliseFolder(picked);
+        setFolderInput(normalised);
+        setActiveFolder(normalised);
+        localStorage.setItem(STORAGE_KEY, normalised);
       }
     } catch {
       // Server-side picker unavailable — user can type the path manually

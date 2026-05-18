@@ -1,6 +1,5 @@
 import React from "react";
 import * as zarr from "zarrita";
-import { ZARR_BASE_URL } from "../config";
 
 type SliceType = "inline" | "crossline" | "timeslice";
 
@@ -57,7 +56,7 @@ function makeCacheKey(
 }
 
 /**
- * Opens a zarr v3 store (via zarrita.js FetchStore + withConsolidatedMetadata),
+ * Opens a zarr v3 store (via zarrita.js FetchStore),
  * extracts the named variable, and returns a 2-D slice as a Float32Array.
  *
  * LRU cache of last 5 slices to avoid re-fetching on tab/axis toggle.
@@ -93,20 +92,21 @@ export default function useZarrSlice(
 
     async function fetchSlice() {
       try {
-        // Build the full URL for the zarr store
+        // folderPath is an absolute filesystem path (e.g. /Users/.../seismic__0517_...).
+        // Build an HTTP URL via /api/zarr, which serves files from the filesystem.
+        // Strip trailing slash from folderPath; storePath is already relative.
         const storeUrl =
-          ZARR_BASE_URL.replace(/\/$/, "") +
-          "/" +
+          window.location.origin +
+          "/api/zarr" +
           folderPath.replace(/\/$/, "") +
           "/" +
           storePath;
 
         const rawStore = new zarr.FetchStore(storeUrl);
-        const store = await zarr.withConsolidatedMetadata(rawStore);
 
-        // Open the variable array (root location → resolve to variable path)
-        const loc = zarr.root(store);
-        const arr = await zarr.open(loc.resolve("/" + variable), { kind: "array" });
+        // Open the variable array directly by path — no consolidated metadata needed.
+        // zarrita fetches {storeUrl}/{variable}/zarr.json on demand.
+        const arr = await zarr.open(zarr.root(rawStore).resolve("/" + variable), { kind: "array" });
 
         // Build selection for the requested slice
         const sel = buildSelection(sliceType, sliceIndex);
