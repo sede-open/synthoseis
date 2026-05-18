@@ -26,7 +26,7 @@ import uuid
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import StreamingResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
 from api.config import SimulationConfig
@@ -240,12 +240,18 @@ def api_manifest(project_folder: str | None = None) -> list:
     from scripts.generate_manifest import generate_manifest
 
     if project_folder:
+        import re as _re
         folder = str(pathlib.Path(_os.path.expanduser(project_folder)).resolve())
         if not pathlib.Path(folder).exists():
             raise HTTPException(
                 status_code=404,
                 detail=f"project_folder does not exist: {folder}",
             )
+        # Auto-detect: if the user passed a seismic__* run folder directly,
+        # step up to the parent so generate_manifest can scan all siblings.
+        _run_folder_re = _re.compile(r"^seismic__(\d{8}|\d{4}_\d{4})_.+$")
+        if _run_folder_re.match(pathlib.Path(folder).name):
+            folder = str(pathlib.Path(folder).parent)
         try:
             return generate_manifest(folder, overwrite=True)
         except Exception as exc:
@@ -294,6 +300,30 @@ def api_run_manifest(run_id: str) -> list:
         return generate_manifest(folder, overwrite=False)
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+# ---------------------------------------------------------------------------
+# Zarr file server — serves arbitrary filesystem paths for the browser zarr client
+# ---------------------------------------------------------------------------
+
+@app.get("/api/zarr/{file_path:path}")
+def serve_zarr_file(file_path: str) -> FileResponse:
+    """Serve zarr chunk files and metadata from the filesystem.
+
+    The browser-side zarrita client (FetchStore) fetches zarr.json metadata and
+    chunk files via HTTP. This endpoint maps URL path segments back to absolute
+    filesystem paths so those files can be reached.
+
+    Example:
+      GET /api/zarr/Users/alice/synthoseis_output/run/store.zarr/zarr.json
+      → serves /Users/alice/synthoseis_output/run/store.zarr/zarr.json
+    """
+    import mimetypes as _mimetypes
+    full_path = pathlib.Path("/" + file_path)
+    if not full_path.exists() or not full_path.is_file():
+        raise HTTPException(status_code=404, detail=f"Not found: {full_path}")
+    media_type = _mimetypes.guess_type(str(full_path))[0] or "application/octet-stream"
+    return FileResponse(str(full_path), media_type=media_type)
 
 
 # ---------------------------------------------------------------------------

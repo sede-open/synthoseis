@@ -61,6 +61,16 @@ export default function RunViewer({ folderId }: RunViewerProps): React.ReactElem
     setSliceIndex(0);
   };
 
+  // Build the absolute folder path used for slice serving.
+  // Guard: if projectFolder already ends with the run folder name (user entered
+  // the run subfolder directly instead of the parent), don't double it.
+  const runFolderPath = React.useMemo(() => {
+    if (!entry) return "";
+    if (!projectFolder) return entry.folder;
+    const suffix = "/" + entry.folder;
+    return projectFolder.endsWith(suffix) ? projectFolder : projectFolder + suffix;
+  }, [projectFolder, entry]);
+
   if (loading) {
     return (
       <div style={{ display: "flex", justifyContent: "center", marginTop: 80 }}>
@@ -221,7 +231,7 @@ export default function RunViewer({ folderId }: RunViewerProps): React.ReactElem
         <div style={{ flex: "1 1 600px", minWidth: 300 }}>
           {selectedVolume ? (
             <SliceViewer
-              folderPath={entry.folder}
+              folderPath={runFolderPath}
               volume={selectedVolume}
               sliceType={sliceType}
               sliceIndex={sliceIndex}
