@@ -141,6 +141,13 @@ async def launch_run(run_id: str, config_json_path: str, repo_root: Path) -> Non
         cwd=str(repo_root),
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.STDOUT,
+        env={
+            **os.environ,
+            # log.py falls back to /scratch when GC_LOG_DIR is unset, which is
+            # read-only on macOS. Point it at the project folder instead so the
+            # geocrawler.log file lands alongside the run output.
+            "GC_LOG_DIR": _output_folder or str(repo_root),
+        },
     )
     _processes[run_id] = process
 
