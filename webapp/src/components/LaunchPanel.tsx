@@ -32,7 +32,7 @@ import type { SimulationConfig } from "../types/simulation";
 
 const DEFAULT_CONFIG: SimulationConfig = {
   project: "rpm_example",
-  project_folder: "~/synthoseis_output",
+  project_folder: "",
   work_folder: "~/synthoseis_work",
   run_id: undefined,
   cube_shape: [300, 300, 1250],
@@ -294,13 +294,16 @@ export default function LaunchPanel({
       ? "sand_layer_fraction min must be less than max"
       : null;
 
+  const projectFolderError =
+    projectFolder.trim() === "" ? "Project folder is required" : null;
+
   const hasErrors =
-    !!thicknessError || !!closureError || !!anglesError || !!sandFracError;
+    !!thicknessError || !!closureError || !!anglesError || !!sandFracError || !!projectFolderError;
 
   // ---- Handlers ------------------------------------------------------------
   function handleLoadDefaults() {
     setProject(DEFAULT_CONFIG.project);
-    setProjectFolder(DEFAULT_CONFIG.project_folder);
+    setProjectFolder("");
     setWorkFolder(DEFAULT_CONFIG.work_folder);
     setRunId("");
     setCubeX(DEFAULT_CONFIG.cube_shape[0]);
@@ -440,12 +443,19 @@ export default function LaunchPanel({
             />
           )}
         </FormGroup>
-        <FormGroup label="Project folder" labelFor="project-folder">
+        <FormGroup
+          label="Project folder"
+          labelFor="project-folder"
+          labelInfo="(required)"
+          intent={projectFolderError ? Intent.DANGER : Intent.NONE}
+          helperText={projectFolderError ?? undefined}
+        >
           <InputGroup
             id="project-folder"
             value={projectFolder}
             onChange={(e) => setProjectFolder(e.target.value)}
-            placeholder="~/synthoseis_output"
+            placeholder="Select or paste an output folder path…"
+            intent={projectFolderError ? Intent.DANGER : Intent.NONE}
             rightElement={
               <Button
                 icon="folder-open"
