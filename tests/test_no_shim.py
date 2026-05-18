@@ -21,7 +21,7 @@ BANNED_NAMES = {
 BANNED_IMPORT_MODULES = {"tables"}
 
 WORKTREE = pathlib.Path(__file__).resolve().parents[1]
-SCAN_DIRS = [WORKTREE / "datagenerator"]
+SCAN_DIRS = [WORKTREE / "datagenerator", WORKTREE / "rockphysics"]
 SCAN_FILES = [WORKTREE / "main.py"]
 
 

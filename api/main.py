@@ -3,6 +3,7 @@
 Routes:
   GET  /api/models                   - List available rock-physics models
   GET  /api/browse-directory         - Open native OS folder-picker dialog
+  GET  /api/manifest                 - Combined manifest for all COMPLETE runs
   GET  /api/runs                     - List all runs
   POST /api/runs                     - Submit a new simulation run
   GET  /api/runs/{run_id}            - Get a single run record
@@ -64,7 +65,10 @@ def get_models() -> list[str]:
     """Return a list of available rock-physics model names."""
     rpm_dir = REPO_ROOT / "rockphysics"
     exclude = {"__init__", "RockPropertyModels"}
-    return [p.stem for p in sorted(rpm_dir.glob("*.py")) if p.stem not in exclude]
+    # Strip the conventional "rpm_" prefix so the returned names match the
+    # values expected by select_rpm (e.g. "rpm_example.py" -> "example").
+    stems = [p.stem for p in sorted(rpm_dir.glob("*.py")) if p.stem not in exclude]
+    return [s[len("rpm_"):] if s.startswith("rpm_") else s for s in stems]
 
 
 @app.get("/api/browse-directory", response_model=dict)
@@ -217,25 +221,79 @@ async def api_run_logs(run_id: str) -> StreamingResponse:
 # Manifest
 # ---------------------------------------------------------------------------
 
+@app.get("/api/manifest")
+def api_manifest(project_folder: str | None = None) -> list:
+    """Return the combined manifest for completed runs.
+
+    If *project_folder* is supplied (a server-side path, ``~`` is expanded),
+    that folder is scanned directly via generate_manifest and the result is
+    returned immediately (manifest.json is always regenerated so the viewer
+    reflects the current state on disk).
+
+    Without *project_folder* the endpoint falls back to the runs DB: it
+    collects unique output_folder values from COMPLETE runs and merges their
+    manifests (cached via overwrite=False).
+    """
+    import os as _os
+    import sys as _sys
+    _sys.path.insert(0, str(REPO_ROOT))
+    from scripts.generate_manifest import generate_manifest
+
+    if project_folder:
+        folder = str(pathlib.Path(_os.path.expanduser(project_folder)).resolve())
+        if not pathlib.Path(folder).exists():
+            raise HTTPException(
+                status_code=404,
+                detail=f"project_folder does not exist: {folder}",
+            )
+        try:
+            return generate_manifest(folder, overwrite=True)
+        except Exception as exc:
+            raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+    # --- DB fallback ---------------------------------------------------------
+    runs = list_runs()
+    seen_folders: set[str] = set()
+    entries: list = []
+    for run in runs:
+        if run.get("status") != "COMPLETE":
+            continue
+        raw_folder = run.get("output_folder")
+        if not raw_folder:
+            continue
+        folder = str(pathlib.Path(_os.path.expanduser(raw_folder)).resolve())
+        if folder in seen_folders or not pathlib.Path(folder).exists():
+            continue
+        seen_folders.add(folder)
+        try:
+            entries.extend(generate_manifest(folder, overwrite=False))
+        except Exception as exc:
+            print(f"WARNING: could not generate manifest for {folder}: {exc}")
+    return entries
+
+
 @app.get("/api/runs/{run_id}/manifest")
-def api_run_manifest(run_id: str) -> dict:
-    """Return the zarr manifest for the completed run's output folder."""
+def api_run_manifest(run_id: str) -> list:
+    """Return the zarr manifest entries for a single completed run's output folder."""
     run = get_run(run_id)
     if run is None:
         raise HTTPException(status_code=404, detail=f"Run '{run_id}' not found")
-    output_folder = run.get("output_folder")
-    if not output_folder:
+    raw_folder = run.get("output_folder")
+    if not raw_folder:
         raise HTTPException(status_code=404, detail="output_folder not set for this run")
 
-    result = subprocess.run(
-        ["python", "scripts/generate_manifest.py", output_folder],
-        capture_output=True,
-        text=True,
-        cwd=str(REPO_ROOT),
-    )
-    if result.returncode != 0:
-        raise HTTPException(status_code=500, detail=result.stderr)
-    return json.loads(result.stdout)
+    import os as _os
+    import sys as _sys
+    _sys.path.insert(0, str(REPO_ROOT))
+    from scripts.generate_manifest import generate_manifest
+
+    folder = str(pathlib.Path(_os.path.expanduser(raw_folder)).resolve())
+    if not pathlib.Path(folder).exists():
+        raise HTTPException(status_code=404, detail=f"output_folder does not exist: {folder}")
+    try:
+        return generate_manifest(folder, overwrite=False)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
 # ---------------------------------------------------------------------------

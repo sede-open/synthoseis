@@ -9,10 +9,13 @@ interface UseManifestResult {
 }
 
 /**
- * Fetches and parses manifest.json from MANIFEST_URL.
- * Returns the parsed manifest entries, a loading flag, and an error string.
+ * Fetches and parses the manifest from MANIFEST_URL (the /api/manifest endpoint).
+ *
+ * When *projectFolder* is provided it is forwarded as `?project_folder=…` so
+ * the API scans that specific folder on disk rather than reading from the DB.
+ * Pass `null` / `undefined` to use the DB-backed fallback.
  */
-export default function useManifest(): UseManifestResult {
+export default function useManifest(projectFolder?: string | null): UseManifestResult {
   const [data, setData] = React.useState<ManifestEntry[] | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
@@ -24,11 +27,18 @@ export default function useManifest(): UseManifestResult {
       setLoading(true);
       setError(null);
       try {
-        const resp = await fetch(MANIFEST_URL);
+        const url = projectFolder
+          ? `${MANIFEST_URL}?project_folder=${encodeURIComponent(projectFolder)}`
+          : MANIFEST_URL;
+        const resp = await fetch(url);
         if (!resp.ok) {
-          throw new Error(
-            `manifest.json responded with HTTP ${resp.status}: ${resp.statusText}`
-          );
+          // Prefer the API's error detail when available
+          let detail = resp.statusText;
+          try {
+            const body = await resp.json();
+            if (body?.detail) detail = body.detail;
+          } catch { /* ignore */ }
+          throw new Error(`manifest responded with HTTP ${resp.status}: ${detail}`);
         }
         const json = (await resp.json()) as ManifestEntry[];
         if (!cancelled) {
@@ -37,7 +47,7 @@ export default function useManifest(): UseManifestResult {
       } catch (err) {
         if (!cancelled) {
           setError(
-            err instanceof Error ? err.message : "Could not load manifest.json"
+            err instanceof Error ? err.message : "Could not load manifest"
           );
         }
       } finally {
@@ -49,7 +59,7 @@ export default function useManifest(): UseManifestResult {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [projectFolder]);
 
   return { data, loading, error };
 }

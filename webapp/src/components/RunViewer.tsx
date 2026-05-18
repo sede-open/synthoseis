@@ -13,7 +13,16 @@ interface RunViewerProps {
 }
 
 export default function RunViewer({ folderId }: RunViewerProps): React.ReactElement {
-  const { data: manifest, loading, error } = useManifest();
+  // Re-use the project folder the user last loaded in ProjectDashboard so the
+  // manifest fetch is scoped to the same folder (avoids a DB-only fallback).
+  const projectFolder = React.useMemo(() => {
+    try {
+      return localStorage.getItem("synthoseis_project_folder") || null;
+    } catch {
+      return null;
+    }
+  }, []);
+  const { data: manifest, loading, error } = useManifest(projectFolder);
 
   const [selectedVolume, setSelectedVolume] = React.useState<VolumeInfo | null>(null);
   const [sliceType, setSliceType] = React.useState<"inline" | "crossline" | "timeslice">("inline");

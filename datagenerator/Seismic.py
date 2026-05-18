@@ -128,7 +128,7 @@ class SeismicVolume(Geomodel):
             )
             plot_wavelets(_f, _a, _w, labels, pngname)
 
-            rfc_bandlimited_wavelet = np.zeros_like(self.rfc_noise_added)
+            rfc_bandlimited_wavelet = np.zeros(self.rfc_noise_added.shape, dtype=self.rfc_noise_added.dtype)
             if self.cfg.model_qc_volumes:
                 wavelets = [
                     w_nr,
@@ -419,7 +419,7 @@ class SeismicVolume(Geomodel):
         data_std = data_below_seafloor.std()
 
         # Create array to store the 3D noise model for each angle
-        noise3d_cubes = np.zeros_like(self.rfc_raw[:])
+        noise3d_cubes = np.zeros(self.rfc_raw.shape, dtype=self.rfc_raw.dtype)
 
         # Add weighted stack of noise using Hilterman equation to each angle substack
         noise_0deg = self.noise_3d(self.rfc_raw.shape[1:], verbose=False)
@@ -447,7 +447,10 @@ class SeismicVolume(Geomodel):
                     f"\n\tdata_std = {data_std:.4f}\n\tnoise_std = {noise_std:.4f}"
                 )
 
-        self.rfc_noise_added[:] = noise3d_cubes + self.rfc_raw[:]
+        # Add noise per-angle to avoid a temporary 4D array (noise3d_cubes + rfc_raw[:]).
+        # Each slice is a 3D array — much cheaper than materialising two full 4D copies.
+        for x in range(self.rfc_noise_added.shape[0]):
+            self.rfc_noise_added[x, ...] = noise3d_cubes[x, ...] + self.rfc_raw[x, ...]
 
     def apply_bandlimits(self, data, frequencies=None):
         """
@@ -1320,24 +1323,21 @@ class SeismicVolume(Geomodel):
         seismic_dir = os.path.join(self.cfg.work_subfolder, "seismic")
         os.makedirs(seismic_dir, exist_ok=True)
         dims = ("inline", "crossline", "time")
-        write_volume_to_zarr(
-            self.rho[:],
-            os.path.join(seismic_dir, f"qc_volume_rho_{self.cfg.date_stamp}.zarr"),
-            name="data",
-            dims=dims,
-        )
-        write_volume_to_zarr(
-            self.vp[:],
-            os.path.join(seismic_dir, f"qc_volume_vp_{self.cfg.date_stamp}.zarr"),
-            name="data",
-            dims=dims,
-        )
-        write_volume_to_zarr(
-            self.vs[:],
-            os.path.join(seismic_dir, f"qc_volume_vs_{self.cfg.date_stamp}.zarr"),
-            name="data",
-            dims=dims,
-        )
+        # Write one volume at a time and release the in-memory slice before
+        # loading the next — avoids holding rho+vp+vs simultaneously in RAM.
+        for _name, _arr in (
+            ("rho", self.rho),
+            ("vp", self.vp),
+            ("vs", self.vs),
+        ):
+            _data = np.asarray(_arr)  # single materialise per volume
+            write_volume_to_zarr(
+                _data,
+                os.path.join(seismic_dir, f"qc_volume_{_name}_{self.cfg.date_stamp}.zarr"),
+                name="data",
+                dims=dims,
+            )
+            del _data  # release before loading next volume
 
     def _write_gather_blocking(self, data, group_name, attrs=None):
         """Blocking zarr v3 write — called from background thread."""

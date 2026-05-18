@@ -31,3 +31,8 @@ dependencies = [
 dev = [
     "pytest>=9.0.3",
 ]
+
+[tool.pytest.ini_options]
+markers = [
+    "slow: marks tests as slow end-to-end integration tests (deselect with '-m not slow')",
+]

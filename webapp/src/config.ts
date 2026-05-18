@@ -8,5 +8,5 @@
  *   and serve from dist/. Both values are relative to the page origin.
  */
 
-export const MANIFEST_URL = "./manifest.json";
+export const MANIFEST_URL = "/api/manifest";
 export const ZARR_BASE_URL = "./";

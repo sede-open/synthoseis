@@ -63,7 +63,10 @@ def write_volume_to_zarr(
         ``BloscCodec(cname="zstd", clevel=5, shuffle=bitshuffle)``.
         Pass ``None`` to write without compression (useful for benchmarks).
     """
-    da = xr.DataArray(np.asarray(arr), dims=dims, coords=coords or {}, attrs=attrs or {})
+    # np.asarray is a no-op for a C-contiguous ndarray but avoids the caller
+    # needing to pre-convert; for zarr/memmap proxies it forces a single
+    # materialise here rather than letting xarray create an implicit copy later.
+    da = xr.DataArray(np.asarray(arr, dtype=getattr(arr, 'dtype', None)), dims=dims, coords=coords or {}, attrs=attrs or {})
     ds = da.to_dataset(name=name)
 
     # Build encoding dict combining chunk spec and compressor.

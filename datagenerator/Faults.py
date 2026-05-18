@@ -2105,17 +2105,18 @@ class Faults(Horizons, Geomodel):
                         do_it = False
                         break
 
-                    random_idx = xyz_xyz[:, self.rng.choice(xyz_xyz.shape[1])]
-                    print(
-                        "   ... Computing fault middle to hang max displacement function"
-                    )
-                    print("    ... x idx for max displacement  = ", random_idx[0])
-                    print("    ... y idx for max displacement  = ", random_idx[1])
-                    print("    ... z idx for max displacement  = ", random_idx[2])
-                    print(
-                        "    ... ellipsoid value  = ",
-                        ellipse[random_idx[0], random_idx[1], random_idx[2]],
-                    )
+                    if xyz_xyz.size != 0:
+                        random_idx = xyz_xyz[:, self.rng.choice(xyz_xyz.shape[1])]
+                        print(
+                            "   ... Computing fault middle to hang max displacement function"
+                        )
+                        print("    ... x idx for max displacement  = ", random_idx[0])
+                        print("    ... y idx for max displacement  = ", random_idx[1])
+                        print("    ... z idx for max displacement  = ", random_idx[2])
+                        print(
+                            "    ... ellipsoid value  = ",
+                            ellipse[random_idx[0], random_idx[1], random_idx[2]],
+                        )
             else:
                 print(
                     "    ... Empty intersection between fault and cube, assign d-max at cube lower corner"

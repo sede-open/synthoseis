@@ -638,8 +638,8 @@ class Parameters:
         """
         d = self._read_json()
         self.project = d["project"]
-        self.project_folder = d["project_folder"]
-        wfolder = d["work_folder"]
+        self.project_folder = os.path.expanduser(d["project_folder"])
+        wfolder = os.path.expanduser(d["work_folder"])
         if not os.path.exists(wfolder):
             wfolder = "/tmp"  # In case work_folder does not exist, use /tmp
         self.work_folder = wfolder

@@ -24,3 +24,5 @@ webapp/dist/
 uv.lock
 poetry.lock
 environment.yml
+runs.db
+geocrawler.log
