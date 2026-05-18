@@ -171,19 +171,20 @@ def rpm_qc_plots(cfg, rpm):
     rpm = rpm.create_1d_trends()
 
     # Randomised rock properties. decimate a bit
+    ms = cfg.model_store
     if hasattr(cfg, "bulk_z_shift"):
-        depth = cfg.model_store["faulted_depth"][::4, ::4, ::2] + cfg.bulk_z_shift
+        depth = ms["faulted_depth"][::4, ::4, ::2] + cfg.bulk_z_shift
     else:
-        depth = cfg.model_store["faulted_depth"][::4, ::4, ::2]
-    lith = cfg.model_store["faulted_lithology"][::4, ::4, ::2]
-    ng = cfg.model_store["faulted_net_to_gross"][::4, ::4, ::2]
-    rho = cfg.model_store["rho"][::4, ::4, ::2]
-    vp = cfg.model_store["vp"][::4, ::4, ::2]
-    vs = cfg.model_store["vs"][::4, ::4, ::2]
-    oil = cfg.model_store["oil_closures"][::4, ::4, ::2]
-    gas = cfg.model_store["gas_closures"][::4, ::4, ::2]
+        depth = ms["faulted_depth"][::4, ::4, ::2]
+    lith = ms["faulted_lithology"][::4, ::4, ::2]
+    ng = ms["faulted_net_to_gross"][::4, ::4, ::2]
+    rho = ms["rho"][::4, ::4, ::2]
+    vp = ms["vp"][::4, ::4, ::2]
+    vs = ms["vs"][::4, ::4, ::2]
+    oil = ms["oil_closures"][::4, ::4, ::2]
+    gas = ms["gas_closures"][::4, ::4, ::2]
     if cfg.include_salt:
-        salt = cfg.model_store["salt_segments"][::4, ::4, ::2]
+        salt = ms["salt_segments"][::4, ::4, ::2]
         rho_salt = rho[salt > 0]
         vp_salt = vp[salt > 0]
         vs_salt = vs[salt > 0]
