@@ -50,8 +50,13 @@ export default function RunViewer({ folderId }: RunViewerProps): React.ReactElem
 
   const entry: ManifestEntry | undefined = React.useMemo(() => {
     if (!manifest) return undefined;
-    // Find by folder name; fallback to first entry on unknown folderId
-    return manifest.find((e) => e.folder === folderId) ?? manifest[0];
+    // Match by exact folder name first, then by run_id suffix (handles legacy
+    // DB rows where output_folder was stored as the project root instead of
+    // the seismic__ subfolder).
+    return (
+      manifest.find((e) => e.folder === folderId) ??
+      manifest.find((e) => e.run_id && folderId.endsWith(e.run_id))
+    );
   }, [manifest, folderId]);
 
   // Auto-select first volume when entry loads (only when no volume is selected yet).
