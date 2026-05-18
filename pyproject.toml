@@ -6,6 +6,11 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "bruges>=0.5.4",
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "httpx>=0.27",
+    "pydantic>=2.5",
+    "anyio>=4.0",
     "commentjson",
     "matplotlib",
     "numba",
@@ -20,11 +25,6 @@ dependencies = [
     "tqdm",
     "xarray",
     "zarr>=3",
-    "fastapi>=0.111",
-    "uvicorn[standard]>=0.29",
-    "httpx>=0.27",
-    "pydantic>=2.5",
-    "anyio>=4.0",
 ]
 
 [dependency-groups]

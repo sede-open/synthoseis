@@ -26,3 +26,6 @@ poetry.lock
 environment.yml
 runs.db
 geocrawler.log
+node_modules/
+.steward/
+*.db

@@ -1255,7 +1255,7 @@ requires-dist = [
     { name = "anyio", specifier = ">=4.0" },
     { name = "bruges", specifier = ">=0.5.4" },
     { name = "commentjson" },
-    { name = "fastapi", specifier = ">=0.111" },
+    { name = "fastapi", specifier = ">=0.115" },
     { name = "httpx", specifier = ">=0.27" },
     { name = "matplotlib" },
     { name = "numba" },
@@ -1269,7 +1269,7 @@ requires-dist = [
     { name = "scipy" },
     { name = "setuptools", specifier = ">=76.0.0" },
     { name = "tqdm" },
-    { name = "uvicorn", extras = ["standard"], specifier = ">=0.29" },
+    { name = "uvicorn", extras = ["standard"], specifier = ">=0.30" },
     { name = "xarray" },
     { name = "zarr", specifier = ">=3" },
 ]
