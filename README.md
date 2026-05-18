@@ -19,6 +19,8 @@ Read our documentation: https://sede-open.github.io/synthoseis/datagenerator.htm
 
 We provide an [environment.yml](environment.yml) to install the required packages for synthoseis.
 
+> **Python version:** Synthoseis requires Python 3.10 or later. Use whichever version and environment manager you prefer (conda, pyenv, uv, system Python, etc.).
+
 ## Resources
 
 ### Quick Start
@@ -29,6 +31,38 @@ Run a model with parameters provided in the example config file
 conda activate synthoseis
 python main.py --config config/example.json --num_runs 1 --run_id seismic_example
 ```
+
+### Interactive Dashboard
+
+Synthoseis ships with an interactive web dashboard that lets you configure and launch generation runs, monitor progress in real time, and explore outputs.
+
+#### Prerequisites
+
+- [uv](https://docs.astral.sh/uv/) — Python package/project manager  
+- [Node.js](https://nodejs.org) (includes `npm`) — required for the web frontend
+
+#### Start the dashboard
+
+From the repository root run the single dev-launch script:
+
+```bash
+./scripts/dev.sh
+```
+
+This starts both services in parallel and shuts them both down cleanly on `Ctrl-C`:
+
+| Service | URL |
+|---------|-----|
+| REST API (FastAPI / uvicorn) | http://localhost:8000 |
+| Web app (Vite / React) | http://localhost:5173 |
+
+On first run `dev.sh` will automatically install the webapp's Node dependencies if `webapp/node_modules` is not present.
+
+#### What you can do in the dashboard
+
+- Fill in a generation config via a guided form (no manual JSON editing required)
+- Kick off one or more generation runs and watch live log output
+- Browse completed models and QC images directly in the browser
 
 ### Overview of workflow
 

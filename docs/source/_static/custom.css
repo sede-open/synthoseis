@@ -1,0 +1,23 @@
+/* Synthoseis docs — minimal overrides on top of Furo */
+
+/* Tighten up the API reference tables */
+.py.method dt, .py.attribute dt {
+    font-size: 0.9rem;
+}
+
+/* Diataxis section badges in the sidebar */
+.sidebar-brand-text {
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+
+/* Keep code blocks readable at narrow widths */
+div.highlight pre {
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* Subtle separator between diataxis quadrants in the TOC */
+.toctree-l1 > a {
+    font-weight: 600;
+}
