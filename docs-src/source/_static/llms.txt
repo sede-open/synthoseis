@@ -1,0 +1,37 @@
+# Synthoseis documentation index
+# Machine-readable list of documentation pages for LLM ingestion.
+# Format: one URL per line (relative to the docs root).
+
+/index.html
+
+# Tutorials (learning-oriented)
+/tutorials/index.html
+/tutorials/first-model.html
+/tutorials/dashboard.html
+
+# How-to guides (task-oriented)
+/how-to/index.html
+/how-to/run-cli.html
+/how-to/run-dashboard.html
+/how-to/custom-rpm.html
+/how-to/run-tests.html
+/how-to/api-client.html
+/how-to/batch-runs.html
+
+# Reference (information-oriented)
+/reference/index.html
+/reference/config-schema.html
+/reference/api-endpoints.html
+/reference/cli.html
+/reference/module-api.html
+
+# Explanation (understanding-oriented)
+/explanation/index.html
+/explanation/architecture.html
+/explanation/pipeline.html
+/explanation/output-format.html
+/explanation/rock-physics.html
+
+# Meta
+/llms.html
+/contributing.html
