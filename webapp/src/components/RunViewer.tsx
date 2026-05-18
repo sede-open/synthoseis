@@ -54,23 +54,30 @@ export default function RunViewer({ folderId }: RunViewerProps): React.ReactElem
     return manifest.find((e) => e.folder === folderId) ?? manifest[0];
   }, [manifest, folderId]);
 
-  // Auto-select first volume when entry loads
+  // Auto-select first volume when entry loads (only when no volume is selected yet).
   React.useEffect(() => {
-    if (entry && entry.volumes.length > 0) {
+    if (entry && entry.volumes.length > 0 && !selectedVolume) {
       setSelectedVolume(entry.volumes[0]);
-      setSliceIndex(0);
     }
   }, [entry]);
 
-  // Reset slice index when volume or slice type changes
+  // Clamp slice index to the valid range of the current volume + slice type.
+  // Preserves the user's position when switching volumes or slice types;
+  // only pulls the index down if it falls outside the new dimension.
   React.useEffect(() => {
-    setSliceIndex(0);
+    if (!selectedVolume) return;
+    const max =
+      sliceType === "inline"
+        ? selectedVolume.shape[0] - 1
+        : sliceType === "crossline"
+        ? selectedVolume.shape[1] - 1
+        : selectedVolume.shape[2] - 1;
+    setSliceIndex((prev) => Math.min(prev, max));
   }, [selectedVolume, sliceType]);
 
-  // Update selected volume (no colormap reset — user keeps their choice)
+  // Update selected volume — slice index is preserved (clamped by the effect above).
   const handleVolumeChange = (vol: VolumeInfo) => {
     setSelectedVolume(vol);
-    setSliceIndex(0);
   };
 
   // Build the absolute folder path used for slice serving.
