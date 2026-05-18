@@ -171,21 +171,20 @@ def rpm_qc_plots(cfg, rpm):
     rpm = rpm.create_1d_trends()
 
     # Randomised rock properties. decimate a bit
+    ms = cfg.model_store
     if hasattr(cfg, "bulk_z_shift"):
-        depth = (
-            cfg.h5file.root.ModelData.faulted_depth[::4, ::4, ::2] + cfg.bulk_z_shift
-        )
+        depth = ms["faulted_depth"][::4, ::4, ::2] + cfg.bulk_z_shift
     else:
-        depth = cfg.h5file.root.ModelData.faulted_depth[::4, ::4, ::2]
-    lith = cfg.h5file.root.ModelData.faulted_lithology[::4, ::4, ::2]
-    ng = cfg.h5file.root.ModelData.faulted_net_to_gross[::4, ::4, ::2]
-    rho = cfg.h5file.root.ModelData.rho[::4, ::4, ::2]
-    vp = cfg.h5file.root.ModelData.vp[::4, ::4, ::2]
-    vs = cfg.h5file.root.ModelData.vs[::4, ::4, ::2]
-    oil = cfg.h5file.root.ModelData.oil_closures[::4, ::4, ::2]
-    gas = cfg.h5file.root.ModelData.gas_closures[::4, ::4, ::2]
+        depth = ms["faulted_depth"][::4, ::4, ::2]
+    lith = ms["faulted_lithology"][::4, ::4, ::2]
+    ng = ms["faulted_net_to_gross"][::4, ::4, ::2]
+    rho = ms["rho"][::4, ::4, ::2]
+    vp = ms["vp"][::4, ::4, ::2]
+    vs = ms["vs"][::4, ::4, ::2]
+    oil = ms["oil_closures"][::4, ::4, ::2]
+    gas = ms["gas_closures"][::4, ::4, ::2]
     if cfg.include_salt:
-        salt = cfg.h5file.root.ModelData.salt_segments[::4, ::4, ::2]
+        salt = ms["salt_segments"][::4, ::4, ::2]
         rho_salt = rho[salt > 0]
         vp_salt = vp[salt > 0]
         vs_salt = vs[salt > 0]
@@ -478,9 +477,9 @@ def clip_vp_via_poissons_ratio(vp, vs):
 
 
 def store_1d_trend_dict_to_hdf(cfg, d, z):
-    # Store arrays in HDF
+    # Store arrays in the zarr model store (migrated from HDF5/PyTables)
     for k, v in d.items():
-        cfg.hdf_init(f"rpm_1d_{k}", shape=z.shape)[:] = v
+        cfg.create_array(f"rpm_1d_{k}", shape=z.shape, dtype="float64")[:] = v
 
 
 def calc_ai(rho, vp, log=False):

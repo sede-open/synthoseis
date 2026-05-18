@@ -1,15 +1,18 @@
 import os
 import math
 import numpy as np
+from numpy.random import default_rng
 from scipy import stats
 from scipy.interpolate import griddata
 from datagenerator.Parameters import Parameters
 from itertools import groupby
+import opensimplex as _osx
 
 
 class Horizons:
     def __init__(self, parameters):
         self.cfg = parameters
+        self.rng = default_rng(parameters.horizon_ss.spawn(1)[0])
         self.max_layers = 0
 
     def insert_feature_into_horizon_stack(self, feature, layer_number, maps):
@@ -83,8 +86,8 @@ class Horizons:
     ):
         random_net_over_gross_map = self._perlin(base=None, octave=octave)
 
-        avg_net_over_gross = np.random.uniform(*avg)
-        avg_net_over_gross_stdev = np.random.uniform(*stdev)
+        avg_net_over_gross = self.rng.uniform(*avg)
+        avg_net_over_gross_stdev = self.rng.uniform(*stdev)
 
         # set stdev and mean of map to desired values
         random_net_over_gross_map -= random_net_over_gross_map.mean()
@@ -97,41 +100,55 @@ class Horizons:
         return random_net_over_gross_map
 
     def _perlin(self, base=None, octave=1, lac=1.9, do_rotate=True):
-        import noise
+        """Return a 2-D noise field of shape (xsize, ysize).
 
+        Uses opensimplex.OpenSimplex.noise2array() for fully vectorised,
+        C-level computation — eliminates the O(n²) Python loop from the
+        previous noise.pnoise2 implementation (OPT-1).
+
+        Multi-octave fBm is emulated by accumulating octave passes with
+        halving amplitude (persistence=0.5) and increasing frequency
+        (lacunarity=lac), matching the defaults of the old pnoise2 call.
+        """
         xsize = self.cfg.cube_shape[0]
         ysize = self.cfg.cube_shape[1]
         if base is None:
-            base = np.random.randint(255)
-        # randomly rotate image
+            base = self.rng.integers(255)
+
+        # Decide rotation / flip before computing noise so that rng state
+        # consumption is identical to the previous implementation.
+        number_90_deg_rotations = 0
+        fliplr = False
+        flipud = False
         if do_rotate:
-            number_90_deg_rotations = 0
-            fliplr = False
-            flipud = False
-            if xsize == ysize and np.random.binomial(1, 0.5) == 1:
-                number_90_deg_rotations = int(np.random.uniform(1, 4))
-                # temp = np.rot90(temp, number_90_deg_rotations)
-            # randomly flip left and right, top and bottom
-            if np.random.binomial(1, 0.5) == 1:
+            if xsize == ysize and self.rng.binomial(1, 0.5) == 1:
+                number_90_deg_rotations = int(self.rng.uniform(1, 4))
+            if self.rng.binomial(1, 0.5) == 1:
                 fliplr = True
-            if np.random.binomial(1, 0.5) == 1:
+            if self.rng.binomial(1, 0.5) == 1:
                 flipud = True
 
-        temp = np.array(
-            [
-                [
-                    noise.pnoise2(
-                        float(i) / xsize,
-                        float(j) / ysize,
-                        lacunarity=lac,
-                        octaves=octave,
-                        base=base,
-                    )
-                    for j in range(ysize)
-                ]
-                for i in range(xsize)
-            ]
-        )
+        # Vectorised fBm using opensimplex (seed controls per-call randomness).
+        # OpenSimplex(seed) is deterministic for a given integer seed.
+        gen = _osx.OpenSimplex(seed=int(base))
+        xs = np.arange(xsize, dtype=float) / xsize
+        ys = np.arange(ysize, dtype=float) / ysize
+
+        temp = np.zeros((xsize, ysize), dtype=float)
+        amplitude = 1.0
+        frequency = 1.0
+        max_amplitude = 0.0
+        for _ in range(octave):
+            # noise2array(xs, ys) returns shape (len(ys), len(xs)); transpose
+            # to match the expected (xsize, ysize) convention.
+            temp += amplitude * gen.noise2array(xs * frequency, ys * frequency).T
+            max_amplitude += amplitude
+            amplitude *= 0.5   # persistence matching pnoise2 default
+            frequency *= lac
+
+        if max_amplitude > 0:
+            temp /= max_amplitude
+
         temp = np.rot90(temp, number_90_deg_rotations)
         if fliplr:
             temp = np.fliplr(temp)
@@ -266,9 +283,16 @@ class Horizons:
         return converted_maps
 
     def write_maps_to_disk(self, horizons, name):
-        """Write horizons to disk."""
-        fname = os.path.join(self.cfg.work_subfolder, name)
-        np.save(fname, horizons)
+        """Write horizons to disk as a zarr store."""
+        from datagenerator.output_writer import write_volume_to_zarr
+        zarr_path = os.path.join(self.cfg.work_subfolder, f"{name}.zarr")
+        write_volume_to_zarr(
+            horizons,
+            zarr_path,
+            name="depth",
+            dims=("inline", "crossline", "horizon") if horizons.ndim == 3
+            else tuple(f"dim{i}" for i in range(horizons.ndim)),
+        )
 
     def write_onlap_episodes(
         self, onlap_horizon_list, depth_maps_gaps, depth_maps_infilled, n=35
@@ -305,13 +329,6 @@ class Horizons:
         # Write to disk
         self.write_maps_to_disk(onlaps * self.cfg.digi, "depth_maps_onlaps")
 
-        if self.cfg.hdf_store:
-            # Write onlap maps to hdf
-            from datagenerator.util import write_data_to_hdf
-
-            write_data_to_hdf(
-                "depth_maps_onlaps", onlaps * self.cfg.digi, self.cfg.hdf_master
-            )
 
     def write_fan_horizons(self, fan_horizon_list, depth_maps):
         """Write fan layers to a separate file."""
@@ -331,6 +348,7 @@ class Horizons:
 class RandomHorizonStack(Horizons):
     def __init__(self, parameters):
         self.cfg = parameters
+        self.rng = default_rng(parameters.horizon_ss.spawn(1)[0])
         self.depth_maps = None
         self.depth_maps_gaps = None
         self.max_layers = 0
@@ -345,25 +363,25 @@ class RandomHorizonStack(Horizons):
 
     def _generate_lookup_tables(self):
         # Thicknesses
-        self.thicknesses = stats.gamma.rvs(4.0, 2, size=self.cfg.num_lyr_lut)
+        self.thicknesses = stats.gamma.rvs(4.0, 2, size=self.cfg.num_lyr_lut, random_state=self.rng)
         # Onlaps
         onlap_layer_list = np.sort(
-            np.random.uniform(
-                low=5, high=200, size=int(np.random.triangular(1, 4, 7) + 0.5)
+            self.rng.uniform(
+                low=5, high=200, size=int(self.rng.triangular(1, 4, 7) + 0.5)
             ).astype("int")
         )
         # Dips
         self.dips = (
-            (1.0 - np.random.power(100, self.cfg.num_lyr_lut))
+            (1.0 - self.rng.power(100, self.cfg.num_lyr_lut))
             * 7.0
             * self.cfg.dip_factor_max
         )
         # Azimuths
-        self.azimuths = np.random.uniform(
+        self.azimuths = self.rng.uniform(
             low=0.0, high=360.0, size=(self.cfg.num_lyr_lut,)
         )
         # Channels
-        self.channels = np.random.binomial(1, 3.0 / 100.0, self.cfg.num_lyr_lut)
+        self.channels = self.rng.binomial(1, 3.0 / 100.0, self.cfg.num_lyr_lut)
 
         if self.cfg.verbose:
             print("self.cfg.num_lyr_lut = ", self.cfg.num_lyr_lut)
@@ -395,11 +413,11 @@ class RandomHorizonStack(Horizons):
             )
 
     def _random_layer_thickness(self):
-        rand_oct = int(np.random.triangular(left=1.3, mode=2.65, right=5.25))
+        rand_oct = int(self.rng.triangular(left=1.3, mode=2.65, right=5.25))
 
-        low_thickness_factor = np.random.triangular(left=0.05, mode=0.2, right=0.95)
+        low_thickness_factor = self.rng.triangular(left=0.05, mode=0.2, right=0.95)
 
-        high_thickness_factor = np.random.triangular(left=1.05, mode=1.8, right=2.2)
+        high_thickness_factor = self.rng.triangular(left=1.05, mode=1.8, right=2.2)
 
         thickness_factor_map = self._perlin(octave=rand_oct)
         thickness_factor_map -= thickness_factor_map.mean()
@@ -441,15 +459,15 @@ class RandomHorizonStack(Horizons):
         yi = np.linspace(-0.15, 1.15, int(grid_size[1] * 1.3))
 
         # start with a gently dipping plane similar to that found on passive shelf margins (< 1 degree dip)
-        azimuth = np.random.uniform(0.0, 360.0)
-        dip = np.random.uniform(dip_range[0], dip_range[1])
+        azimuth = self.rng.uniform(0.0, 360.0)
+        dip = self.rng.uniform(dip_range[0], dip_range[1])
 
         # build a residual surface to add to the dipping plane
-        number_halton_points = int(np.random.uniform(100, 500) + 0.5)
+        number_halton_points = int(self.rng.uniform(100, 500) + 0.5)
         number_random_points = int(
-            np.random.uniform(num_points_range[0], num_points_range[1]) + 0.5
+            self.rng.uniform(num_points_range[0], num_points_range[1]) + 0.5
         )
-        z = np.random.rand(number_random_points)
+        z = self.rng.random(number_random_points)
         z -= z.mean()
         if initial:
             elevation_std = self.cfg.initial_layer_stdev
@@ -674,8 +692,8 @@ class RandomHorizonStack(Horizons):
 
         if self.cfg.verbose:
             print("\n ... finished creating horizon layers ...")
-        # Store maps in hdf file
-        self.depth_maps = self.cfg.hdf_init("depth_maps", shape=depth_maps.shape)
+        # Store maps as zarr array in model store
+        self.depth_maps = self.cfg.create_array("depth_maps", shape=depth_maps.shape)
         self.depth_maps[:] = depth_maps
 
         self.cfg.write_to_logfile(
@@ -689,6 +707,7 @@ class RandomHorizonStack(Horizons):
 class Onlaps(Horizons):
     def __init__(self, parameters, depth_maps, thicknesses, max_layers):
         self.cfg = parameters
+        self.rng = default_rng(parameters.horizon_ss.spawn(1)[0])
         self.depth_maps = depth_maps
         self.thicknesses = thicknesses
         self.max_layers = max_layers
@@ -698,10 +717,10 @@ class Onlaps(Horizons):
     def _generate_onlap_lookup_table(self):
         # Onlaps
         onlap_layer_list = np.sort(
-            np.random.uniform(
+            self.rng.uniform(
                 low=5,
                 high=self.max_layers,
-                size=int(np.random.triangular(1, 4, 7) + 0.5),
+                size=int(self.rng.triangular(1, 4, 7) + 0.5),
             ).astype("int")
         )
         if self.cfg.verbose:
@@ -743,9 +762,9 @@ class Onlaps(Horizons):
                     )
                 onlaps_horizon_list.append(i)
 
-                azi = np.random.uniform(low=0.0, high=360.0)
+                azi = self.rng.uniform(low=0.0, high=360.0)
                 azi_list.append(azi)
-                dip = np.random.uniform(low=5.0, high=20.0)
+                dip = self.rng.uniform(low=5.0, high=20.0)
                 dip_list.append(dip)
 
                 dipping_plane2 = (
@@ -804,6 +823,7 @@ class Onlaps(Horizons):
 class BasinFloorFans(Horizons):
     def __init__(self, parameters, max_layers):
         self.cfg = parameters
+        self.rng = default_rng(parameters.horizon_ss.spawn(1)[0])
         self.max_layers = max_layers
         self.fan_layers = None
         # self._generate_fan_lookup_table()
@@ -812,8 +832,8 @@ class BasinFloorFans(Horizons):
         # TODO test where & how often fans should be added. Also check if they overlap with onlaps and if so, what to do
         # Onlaps
         layers_with_fans = np.sort(
-            np.random.uniform(
-                low=5, high=self.max_layers - 1, size=int(np.random.choice([1, 2, 3]))
+            self.rng.uniform(
+                low=5, high=self.max_layers - 1, size=int(self.rng.choice([1, 2, 3]))
             ).astype("int")
         )
         self.fan_layers = layers_with_fans
@@ -823,15 +843,15 @@ class BasinFloorFans(Horizons):
 
     def _generate_basin_floor_fan(self, layer_number):
         # Select parameters for fan
-        _scale = np.random.uniform(50.0, 200.0)  # length in pixels
-        _aspect = np.random.uniform(1.5, 4.0)  # length  width
-        _azimuth = np.random.uniform(0.0, 360.0)
-        _factor = np.random.uniform(1.5, 3.5)
-        _asymmetry_factor = np.random.uniform(-1.0, 1.0)
-        _smoothing_size = np.random.uniform(1.33, 3.0)
+        _scale = self.rng.uniform(50.0, 200.0)  # length in pixels
+        _aspect = self.rng.uniform(1.5, 4.0)  # length  width
+        _azimuth = self.rng.uniform(0.0, 360.0)
+        _factor = self.rng.uniform(1.5, 3.5)
+        _asymmetry_factor = self.rng.uniform(-1.0, 1.0)
+        _smoothing_size = self.rng.uniform(1.33, 3.0)
 
         # Choose whether to create a pair of fans
-        pair_of_fans = np.random.choice([True, False])
+        pair_of_fans = self.rng.choice([True, False])
 
         fan_parameters = (
             f"{_scale:4.2f}, {_aspect:4.2f}, {_azimuth:4.2f}, {_factor:4.2f}, {_asymmetry_factor:4.2f},"
@@ -852,18 +872,18 @@ class BasinFloorFans(Horizons):
         if pair_of_fans:
             if self.cfg.verbose:
                 print("Creating a pair of fans\n")
-            _scale2 = _scale * np.random.uniform(0.667, 1.5)  # length in pixels
-            _aspect2 = _aspect * np.random.uniform(0.75, 1.33)  # length / width
-            _azimuth2 = _azimuth + np.random.uniform(-30.0, 30.0)
+            _scale2 = _scale * self.rng.uniform(0.667, 1.5)  # length in pixels
+            _aspect2 = _aspect * self.rng.uniform(0.75, 1.33)  # length / width
+            _azimuth2 = _azimuth + self.rng.uniform(-30.0, 30.0)
             delta_dist = (_scale + _scale2) / (
                 (_aspect + _aspect2)
-                * np.random.triangular(0.5, 0.85, 1.5)
-                * np.random.choice([-1.0, 1.0])
+                * self.rng.triangular(0.5, 0.85, 1.5)
+                * self.rng.choice([-1.0, 1.0])
             )  # length in pixels
             delta_x, delta_y = self.rotate_point(delta_dist, 0.0, 360.0 - _azimuth2)
-            _factor2 = _factor + np.random.uniform(0.8, 1.25)
-            _asymmetry_factor2 = _asymmetry_factor + np.random.uniform(-0.25, 0.25)
-            _smoothing_size2 = _smoothing_size + np.random.uniform(-0.25, 0.25)
+            _factor2 = _factor + self.rng.uniform(0.8, 1.25)
+            _asymmetry_factor2 = _asymmetry_factor + self.rng.uniform(-0.25, 0.25)
+            _smoothing_size2 = _smoothing_size + self.rng.uniform(-0.25, 0.25)
 
             fan_parameters_2 = (
                 f"{_scale2:4.2f}, {_aspect2:4.2f}, {_azimuth2:4.2f}, {_factor2:4.2f},"
@@ -1016,18 +1036,18 @@ class BasinFloorFans(Horizons):
         # decimate the grid randomly
         decimation_factor = 250
 
-        fan_seed_x = np.random.randint(1, high=(2 ** (32 - 1)))
-        fan_seed_y = np.random.randint(1, high=(2 ** (32 - 1)))
-        fan_seed_z = np.random.randint(1, high=(2 ** (32 - 1)))
+        fan_seed_x = self.rng.integers(1, high=(2 ** (32 - 1)))
+        fan_seed_y = self.rng.integers(1, high=(2 ** (32 - 1)))
+        fan_seed_z = self.rng.integers(1, high=(2 ** (32 - 1)))
         point_indices = np.arange(x.size).astype("int")
         point_indices = point_indices[: x.size // decimation_factor]
-        np.random.shuffle(point_indices)
-        np.random.seed(fan_seed_x)
-        _x = x + np.random.uniform(low=-0.03, high=0.03, size=x.size)
-        np.random.seed(fan_seed_y)
-        _y = y + np.random.uniform(low=-0.03, high=0.03, size=x.size)
-        np.random.seed(fan_seed_z)
-        _z = z + np.random.uniform(low=-0.1, high=0.1, size=x.size)
+        self.rng.shuffle(point_indices)
+        # np.random.seed(fan_seed_x)
+        _x = x + self.rng.uniform(low=-0.03, high=0.03, size=x.size)
+        # np.random.seed(fan_seed_y)
+        _y = y + self.rng.uniform(low=-0.03, high=0.03, size=x.size)
+        # np.random.seed(fan_seed_z)
+        _z = z + self.rng.uniform(low=-0.1, high=0.1, size=x.size)
 
         _x = _x[point_indices]
         _y = _y[point_indices]
@@ -1331,6 +1351,7 @@ class Channel(Horizons):
 class Facies:
     def __init__(self, parameters, max_layers, onlap_horizon_list, fan_horizon_list):
         self.cfg = parameters
+        self.rng = default_rng(parameters.horizon_ss.spawn(1)[0])
         self.max_layers = max_layers
         self.onlap_horizon_list = onlap_horizon_list
         self.fan_horizon_list = fan_horizon_list
@@ -1338,7 +1359,7 @@ class Facies:
 
     def sand_shale_facies_binomial_dist(self):
         """Randomly select sand or shale facies using binomial distribution using the sand_layer_pct from config file"""
-        sand_layer = np.random.binomial(
+        sand_layer = self.rng.binomial(
             1, self.cfg.sand_layer_pct, size=self.max_layers
         )
         # Insert a water-layer code of -1 at the top
@@ -1350,10 +1371,10 @@ class Facies:
         Note: the Binomial distribution can be generated by setting the sand_layer_thickness to 1/sand_layer_pct
         """
         mk = MarkovChainFacies(
-            self.cfg.sand_layer_pct, self.cfg.sand_layer_thickness, (0, 1)
+            self.cfg.sand_layer_pct, self.cfg.sand_layer_thickness, (0, 1), rng=self.rng
         )
         # Randomly select initial state
-        facies = mk.generate_states(np.random.choice(2, 1)[0], num=self.max_layers)
+        facies = mk.generate_states(self.rng.choice(2, 1)[0], num=self.max_layers)
         self.facies = np.hstack((np.array((-1.0)), facies))
 
     def set_layers_below_onlaps_to_shale(self):
@@ -1388,7 +1409,7 @@ class Facies:
 
 
 class MarkovChainFacies:
-    def __init__(self, sand_fraction, sand_thickness, states=(0, 1)):
+    def __init__(self, sand_fraction, sand_thickness, states=(0, 1), rng=None):
         """Initialize the MarkovChain instance.
 
         Parameters
@@ -1399,10 +1420,13 @@ class MarkovChainFacies:
             Thickness of sand layers, given in units of layers
         states : iterable
             An iterable representing the states of the Markov Chain.
+        rng : numpy.random.Generator, optional
+            Random number generator to use for state transitions.
         """
         self.sand_fraction = sand_fraction
         self.sand_thickness = sand_thickness
         self.states = states
+        self.rng = rng if rng is not None else np.random.default_rng()
         self.index_dict = {
             self.states[index]: index for index in range(len(self.states))
         }
@@ -1425,7 +1449,7 @@ class MarkovChainFacies:
         current_state :str
             The current state of the system
         """
-        return np.random.choice(
+        return self.rng.choice(
             self.states, p=self.transition[self.index_dict[current_state], :]
         )
 

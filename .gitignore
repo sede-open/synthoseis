@@ -12,3 +12,20 @@ tags
 /multvt2vds.freq.log
 wip*
 *.code-workspace
+
+# Webapp build artifacts and dependencies (never commit)
+webapp/node_modules/
+webapp/dist/
+
+# Agentic Foundry / tooling — never commit these
+.agentic-docs/
+.worktrees/
+.venv/
+uv.lock
+poetry.lock
+environment.yml
+runs.db
+geocrawler.log
+node_modules/
+.steward/
+*.db

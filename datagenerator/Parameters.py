@@ -1,29 +1,23 @@
 from collections import defaultdict
 import datetime
 import json
-import multiprocessing as mp
 import os
 import pathlib
 import glob
+import shutil
 import sqlite3
 from subprocess import CalledProcessError
 import numpy as np
-import tables
+from numpy.random import SeedSequence, default_rng
+import zarr
+import zarr.storage
 import subprocess
 
 dir_name = os.path.dirname(__file__)
 CONFIG_PATH = os.path.abspath(os.path.join(dir_name, "../config/config_ht.json"))
 
 
-class _Borg:
-    # Any objects using Borg base class will have same shared_state values (Alex Martelli's Borg)
-    _shared_state = {}
-
-    def __init__(self):
-        self.__dict__ = self._shared_state
-
-
-class Parameters(_Borg):
+class Parameters:
     """
     Parameter object storing all model parameters.
 
@@ -84,9 +78,6 @@ class Parameters(_Borg):
             This is the runid of the run, this comes in handy when you have many runs
             with various permutations of parameters, by default None
         """
-        # reset the parameter dict in case we are building models within a loop, and the shared_state dict is not empty
-        self._shared_state = {}
-        super().__init__()
         self.model_dir_name: str = "seismic"
         self.parameter_file = user_config
         self.test_mode = test_mode
@@ -124,7 +115,7 @@ class Parameters(_Borg):
         """
         return self._shared_state[key]
 
-    def setup_model(self, rpm_factors=None) -> None:
+    def setup_model(self, rpm_factors=None, seed=None) -> None:
         """
         Setup Model
         -----------
@@ -140,6 +131,25 @@ class Parameters(_Borg):
         -------
         None
         """
+        # Set up SeedSequence for reproducible randomness
+        if seed is not None:
+            self.master_ss = SeedSequence(seed)
+        elif self.test_mode is not None:
+            self.master_ss = SeedSequence(self.test_mode)
+        else:
+            self.master_ss = SeedSequence()
+        self.effective_seed = self.master_ss.entropy
+        (
+            self.param_ss,
+            self.horizon_ss,
+            self.fault_ss,
+            self.noise_ss,
+            self.property_ss,
+            self.augment_ss,
+            self.ava_ss,
+        ) = self.master_ss.spawn(7)
+        self.rng = default_rng(self.param_ss)
+
         # Set model parameters
         self._set_model_parameters(self.model_dir_name)
         self.make_directories()
@@ -404,10 +414,10 @@ class Parameters(_Borg):
             # Use defaults for RPM Z-shifts and scaling factors
             self.rpm_scaling_factors = dict()
             self.rpm_scaling_factors["layershiftsamples"] = int(
-                np.random.triangular(35, 75, 125)
+                self.rng.triangular(35, 75, 125)
             )
             self.rpm_scaling_factors["RPshiftsamples"] = int(
-                np.random.triangular(5, 11, 20)
+                self.rng.triangular(5, 11, 20)
             )
             self.rpm_scaling_factors["shalerho_factor"] = 1.0
             self.rpm_scaling_factors["shalevp_factor"] = 1.0
@@ -487,11 +497,6 @@ class Parameters(_Borg):
             self.work_subfolder, f"model_parameters_{self.date_stamp}.txt"
         )
 
-        # HDF file to store various model data
-        self.hdf_master = os.path.join(
-            self.work_subfolder, f"seismicCube__{self.date_stamp}.hdf"
-        )
-
     def _calculate_snr_after_lateral_filter(self, sn_db: float) -> float:
         """
         Calculate Signal:Noise Ratio after lateral filter
@@ -531,23 +536,22 @@ class Parameters(_Borg):
         """
         # Initial layer standard deviation
         self.initial_layer_stdev = (
-            np.random.uniform(self.lyr_stdev[0], high=self.lyr_stdev[1])
+            self.rng.uniform(self.lyr_stdev[0], high=self.lyr_stdev[1])
             * self.infill_factor
         )
 
         # lateral filter size, either 1x1, 3x3 or 5x5
-        self.lateral_filter_size = int(np.random.uniform(0, 2) + 0.5) * 2 + 1
+        self.lateral_filter_size = int(self.rng.uniform(0, 2) + 0.5) * 2 + 1
 
-        # Signal to noise in decibels
-        sn_db = triangle_distribution_fix(
-            left=self.snr_db[0], mode=self.snr_db[1], right=self.snr_db[2]
-        )
-        # sn_db = np.random.triangular(left=self.snr_db[0], mode=self.snr_db[1], right=self.snr_db[2])
-        # self.sn_db = self._calculate_snr_after_lateral_filter(sn_db)
+        # Signal to noise in decibels — use self.rng for reproducibility
+        left, mode, right = self.snr_db[0], self.snr_db[1], self.snr_db[2]
+        sn_db = left - 1  # ensure we enter the loop
+        while sn_db < left or sn_db > right:
+            sn_db = self.rng.triangular(left - (mode - left), mode, right + (right - mode))
         self.sn_db = sn_db
 
         # Percentage of layers that are sand
-        self.sand_layer_pct = np.random.uniform(
+        self.sand_layer_pct = self.rng.uniform(
             low=self.sand_layer_pct_min, high=self.sand_layer_pct_max
         )
 
@@ -555,20 +559,20 @@ class Parameters(_Borg):
         if (
             len(self.seabed_min_depth) > 1
         ):  # if low/high value provided, select a value between these
-            self.seabed_min_depth = np.random.randint(
+            self.seabed_min_depth = self.rng.integers(
                 low=self.seabed_min_depth[0], high=self.seabed_min_depth[1]
             )
 
         # Low/High bandwidth to be used
-        self.lowfreq = np.random.uniform(self.bandwidth_low[0], self.bandwidth_low[1])
-        self.highfreq = np.random.uniform(
+        self.lowfreq = self.rng.uniform(self.bandwidth_low[0], self.bandwidth_low[1])
+        self.highfreq = self.rng.uniform(
             self.bandwidth_high[0], self.bandwidth_high[1]
         )
 
         # Choose whether to add coherent noise
-        self.add_noise = np.random.choice((0, 1))
+        self.add_noise = self.rng.choice((0, 1))
         if self.add_noise == 1:
-            self.smiley_or_frowny = np.random.choice((0, 1))
+            self.smiley_or_frowny = self.rng.choice((0, 1))
             if self.smiley_or_frowny == 1:
                 self.fnoise = "random_coherent_frowns"
                 print("Coherent frowns will be inserted")
@@ -580,8 +584,7 @@ class Parameters(_Borg):
             print("No coherent noise will be inserted")
 
         # Salt inclusion
-        # self.include_salt = np.random.choice([True, False], 1, p=[0.5, 0.5])[0]
-        self.noise_stretch_factor = np.random.uniform(1.15, 1.35)
+        self.noise_stretch_factor = self.rng.uniform(1.15, 1.35)
         if self.include_salt:
             print(
                 "Salt will be inserted. noise_stretch_factor = {}".format(
@@ -635,8 +638,8 @@ class Parameters(_Borg):
         """
         d = self._read_json()
         self.project = d["project"]
-        self.project_folder = d["project_folder"]
-        wfolder = d["work_folder"]
+        self.project_folder = os.path.expanduser(d["project_folder"])
+        wfolder = os.path.expanduser(d["work_folder"])
         if not os.path.exists(wfolder):
             wfolder = "/tmp"  # In case work_folder does not exist, use /tmp
         self.work_folder = wfolder
@@ -673,10 +676,15 @@ class Parameters(_Borg):
         self.sand_layer_thickness = d["sand_layer_thickness"]
         self.sand_layer_pct_min = d["sand_layer_fraction"]["min"]
         self.sand_layer_pct_max = d["sand_layer_fraction"]["max"]
-        self.hdf_store = d["write_to_hdf"]
         self.broadband_qc_volume = d["broadband_qc_volume"]
         self.model_qc_volumes = d["model_qc_volumes"]
-        self.multiprocess_bp = d["multiprocess_bp"]
+        self.model_store_in_memory = bool(d.get("model_store_in_memory", False))
+        self.cleanup_intermediates = bool(d.get("cleanup_intermediates", True))
+
+        _proj_basename = os.path.basename(os.path.normpath(self.project_folder))
+        self.gather_store_path = os.path.join(
+            self.work_folder, _proj_basename, "gathers.zarr"
+        )
 
         # print em
         self.__repr__()
@@ -724,6 +732,11 @@ class Parameters(_Borg):
             )
         # Set smaller sized model
         self.cube_shape = tuple([size_x, size_y, self.cube_shape[-1]])
+        # Recalculate gather_store_path after folders changed
+        _proj_basename = os.path.basename(os.path.normpath(self.project_folder))
+        self.gather_store_path = os.path.join(
+            self.work_folder, _proj_basename, "gathers.zarr"
+        )
         # Print message to user
         print(
             "{0}\nTesting Mode\nOutput Folder: {1}\nCube_Shape: {2}\n{0}".format(
@@ -752,12 +765,12 @@ class Parameters(_Borg):
         self.high_fault_throw = 35.0 * self.infill_factor
 
         # mode & clustering are randomly chosen
-        self.mode = np.random.choice([0, 1, 2], 1)[0]
-        self.clustering = np.random.choice([0, 1, 2], 1)[0]
+        self.mode = self.rng.choice([0, 1, 2], 1)[0]
+        self.clustering = self.rng.choice([0, 1, 2], 1)[0]
 
         if self.mode == 0:
             # As random as it can be
-            self.number_faults = np.random.randint(
+            self.number_faults = self.rng.integers(
                 self.min_number_faults, self.max_number_faults
             )
             self.fmode = "random"
@@ -766,23 +779,23 @@ class Parameters(_Borg):
             if self.clustering == 0:
                 self.fmode = "self_branching"
                 # Self Branching. avoid large fault
-                self.number_faults = np.random.randint(3, 9)
+                self.number_faults = self.rng.integers(3, 9)
                 self.low_fault_throw = 5.0 * self.infill_factor
                 self.high_fault_throw = 15.0 * self.infill_factor
             if self.clustering == 1:
                 # Stair case
                 self.fmode = "stair_case"
-                self.number_faults = np.random.randint(5, self.max_number_faults)
+                self.number_faults = self.rng.integers(5, self.max_number_faults)
             if self.clustering == 2:
                 # Relay ramps
                 self.fmode = "relay_ramp"
-                self.number_faults = np.random.randint(3, 9)
+                self.number_faults = self.rng.integers(3, 9)
                 self.low_fault_throw = 5.0 * self.infill_factor
                 self.high_fault_throw = 15.0 * self.infill_factor
         elif self.mode == 2:
             # Horst and graben
             self.fmode = "horst_and_graben"
-            self.number_faults = np.random.randint(3, 7)
+            self.number_faults = self.rng.integers(3, 7)
 
         self.fault_param = [
             str(self.mode) + str(self.clustering),
@@ -924,100 +937,28 @@ class Parameters(_Borg):
 
     @staticmethod
     def year_plus_fraction() -> str:
-        # TODO Move this to utils separate module
-        """
-        Year Plus Fraction
-        ----------------------------------------
+        """Year Plus Fraction — returns a compact timestamp string."""
+        return datetime.datetime.now().strftime("%m%d_%H%M")
 
-        Method generates a time stamp in the format of
-        year + fraction of year.
-
-        Parameters
-        ----------
-        None
-
-        Returns
-        -------
-        fraction of the year : str
-            The time stamp in the format of year + fraction of year
-
-        """
-        now = datetime.datetime.now()
-        year = now.year
-        secs_in_year = datetime.timedelta(days=365).total_seconds()
-        fraction_of_year = (
-            now - datetime.datetime(year, 1, 1, 0, 0)
-        ).total_seconds() / secs_in_year
-        return format(year + fraction_of_year, "14.8f").replace(" ", "")
-
-    def hdf_setup(self, hdf_name: str) -> None:
-        """
-        Setup HDF files
-        ---------------
-
-        This method sets up the HDF structures
-
-        Parameters
-        ----------
-        hdf_name : str
-            The name of the HDF file to be created
-
-        Returns
-        -------
-        None
-        """
-        num_threads = min(8, mp.cpu_count() - 1)
-        tables.set_blosc_max_threads(num_threads)
-        self.hdf_filename = os.path.join(self.temp_folder, hdf_name)
-        self.filters = tables.Filters(
-            complevel=5, complib="blosc"
-        )  # compression with fast write speed
-        self.h5file = tables.open_file(self.hdf_filename, "w")
-        self.h5file.create_group("/", "ModelData")
-
-    def hdf_init(
-        self, dset_name, shape: tuple, dtype: str = "float64"
-    ) -> tables.CArray:
-        """
-        HDF Initialize
-        ----------------------------------------
-
-        Method that initializes the HDF chunked
-        array
-
-        Parameters
-        ----------
-        dset_name : str
-            The name of the dataset to be created
-        shape : tuple
-
-
-        Returns
-        -------
-        new_array: tables.CArray
-        """
-        if "float" in dtype:
-            atom = tables.FloatAtom()
-        elif "uint8" in dtype:
-            atom = tables.UInt8Atom()
+    def setup_model_store(self, path=None, in_memory=None) -> None:
+        """Set up the zarr scratch store for this model run."""
+        if in_memory is None:
+            in_memory = getattr(self, 'model_store_in_memory', False)
+        if in_memory:
+            store = zarr.storage.MemoryStore()
         else:
-            atom = tables.IntAtom()
-        group = self.h5file.root.ModelData
-        new_array = self.h5file.create_carray(
-            group, dset_name, atom, shape, filters=self.filters
-        )
-        return new_array
+            store_path = path or os.path.join(self.temp_folder, "model_data.zarr")
+            store = zarr.storage.LocalStore(store_path)
+        self.model_store = zarr.open_group(store=store, mode="w")
 
-    def hdf_node_list(self):
-        return [x.name for x in self.h5file.list_nodes("ModelData")]
+    def create_array(self, name: str, shape: tuple, dtype: str = "float32") -> zarr.Array:
+        """Create (or overwrite) a named array in the model store."""
+        return self.model_store.create_array(name, shape=shape, dtype=dtype, overwrite=True)
 
-    def hdf_remove_node_list(self, dset_name):
-        group = self.h5file.root.ModelData
-        try:
-            self.h5file.remove_node(group, dset_name)
-        except:
-            pass
-        self.hdf_node_list
+    def remove_array(self, dset_name: str) -> None:
+        """Remove a named array from the model store if it exists."""
+        if dset_name in self.model_store:
+            del self.model_store[dset_name]
 
 
 def triangle_distribution_fix(left, mode, right, random_seed=None):
