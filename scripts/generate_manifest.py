@@ -42,8 +42,9 @@ _SUBDIR_GROUP: dict[str, str] = {
 }
 
 # Pattern for run folder names produced by Parameters.py
-# e.g. "seismic__20260517_my_run_id"
-_RUN_FOLDER_RE = re.compile(r"^seismic__(\d{8})_(.+)$")
+# Supports both legacy format (8-digit: "seismic__20260517_my_run_id")
+# and current MMDD_HHMM format ("seismic__0517_2351_my_run_id").
+_RUN_FOLDER_RE = re.compile(r"^seismic__(\d{8}|\d{4}_\d{4})_(.+)$")
 
 
 # ---------------------------------------------------------------------------

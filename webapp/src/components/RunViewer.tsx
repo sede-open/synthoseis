@@ -31,35 +31,69 @@ export default function RunViewer({ folderId }: RunViewerProps): React.ReactElem
   const [crosslineDraft, setCrosslineDraft] = React.useState(0);
   // Sync draft when sliceIndex resets externally (e.g. volume switch).
   React.useEffect(() => { setCrosslineDraft(sliceIndex); }, [sliceIndex]);
-  const [colormap, setColormap] = React.useState("RdBu");
+  const [colormap, setColormap] = React.useState<string>(() => {
+    try { return localStorage.getItem("synthoseis_colormap") ?? "seismics"; } catch { return "seismics"; }
+  });
+  const [colormapReversed, setColormapReversed] = React.useState<boolean>(() => {
+    try { return localStorage.getItem("synthoseis_colormap_reversed") === "true"; } catch { return false; }
+  });
+
+  // Persist colormap selection to localStorage
+  const handleColormapChange = (value: string) => {
+    setColormap(value);
+    try { localStorage.setItem("synthoseis_colormap", value); } catch { /* ignore */ }
+  };
+  const handleReversedChange = (value: boolean) => {
+    setColormapReversed(value);
+    try { localStorage.setItem("synthoseis_colormap_reversed", String(value)); } catch { /* ignore */ }
+  };
 
   const entry: ManifestEntry | undefined = React.useMemo(() => {
     if (!manifest) return undefined;
-    // Find by folder name; fallback to first entry on unknown folderId
-    return manifest.find((e) => e.folder === folderId) ?? manifest[0];
+    // Match by exact folder name first, then by run_id suffix (handles legacy
+    // DB rows where output_folder was stored as the project root instead of
+    // the seismic__ subfolder).
+    return (
+      manifest.find((e) => e.folder === folderId) ??
+      manifest.find((e) => e.run_id && folderId.endsWith(e.run_id))
+    );
   }, [manifest, folderId]);
 
-  // Auto-select first volume and colormap when entry changes
+  // Auto-select first volume when entry loads (only when no volume is selected yet).
   React.useEffect(() => {
-    if (entry && entry.volumes.length > 0) {
-      const vol = entry.volumes[0];
-      setSelectedVolume(vol);
-      setColormap(colormapForGroup(vol.group));
-      setSliceIndex(0);
+    if (entry && entry.volumes.length > 0 && !selectedVolume) {
+      setSelectedVolume(entry.volumes[0]);
     }
   }, [entry]);
 
-  // Reset slice index when volume or slice type changes
+  // Clamp slice index to the valid range of the current volume + slice type.
+  // Preserves the user's position when switching volumes or slice types;
+  // only pulls the index down if it falls outside the new dimension.
   React.useEffect(() => {
-    setSliceIndex(0);
+    if (!selectedVolume) return;
+    const max =
+      sliceType === "inline"
+        ? selectedVolume.shape[0] - 1
+        : sliceType === "crossline"
+        ? selectedVolume.shape[1] - 1
+        : selectedVolume.shape[2] - 1;
+    setSliceIndex((prev) => Math.min(prev, max));
   }, [selectedVolume, sliceType]);
 
-  // Update colormap when volume changes
+  // Update selected volume — slice index is preserved (clamped by the effect above).
   const handleVolumeChange = (vol: VolumeInfo) => {
     setSelectedVolume(vol);
-    setColormap(colormapForGroup(vol.group));
-    setSliceIndex(0);
   };
+
+  // Build the absolute folder path used for slice serving.
+  // Guard: if projectFolder already ends with the run folder name (user entered
+  // the run subfolder directly instead of the parent), don't double it.
+  const runFolderPath = React.useMemo(() => {
+    if (!entry) return "";
+    if (!projectFolder) return entry.folder;
+    const suffix = "/" + entry.folder;
+    return projectFolder.endsWith(suffix) ? projectFolder : projectFolder + suffix;
+  }, [projectFolder, entry]);
 
   if (loading) {
     return (
@@ -147,7 +181,12 @@ export default function RunViewer({ folderId }: RunViewerProps): React.ReactElem
           <label className="bp5-label" style={{ marginBottom: 4 }}>
             Colormap
           </label>
-          <ColormapSelector value={colormap} onChange={setColormap} />
+          <ColormapSelector
+            value={colormap}
+            onChange={handleColormapChange}
+            reversed={colormapReversed}
+            onReverseChange={handleReversedChange}
+          />
         </div>
       </div>
 
@@ -221,11 +260,12 @@ export default function RunViewer({ folderId }: RunViewerProps): React.ReactElem
         <div style={{ flex: "1 1 600px", minWidth: 300 }}>
           {selectedVolume ? (
             <SliceViewer
-              folderPath={entry.folder}
+              folderPath={runFolderPath}
               volume={selectedVolume}
               sliceType={sliceType}
               sliceIndex={sliceIndex}
               colormap={colormap}
+              reversed={colormapReversed}
             />
           ) : (
             <NonIdealState icon="layers" title="Select a volume" />

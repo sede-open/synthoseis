@@ -155,7 +155,20 @@ async def launch_run(run_id: str, config_json_path: str, repo_root: Path) -> Non
     return_code = await process.wait()
     _processes.pop(run_id, None)
     final_status = "COMPLETE" if return_code == 0 else "FAILED"
-    _update_status(run_id, final_status, output_folder=_output_folder)
+
+    # Resolve the actual seismic__ subfolder created by Parameters.py.
+    # Parameters.py names it  seismic__{MMDD}_{HHMM}_{run_id}  but we don't
+    # know the datestamp ahead of time, so we scan now that the run is done.
+    resolved_folder = _output_folder  # fallback to project root
+    if _project_folder and run_id:
+        import glob as _glob
+        pattern = str(pathlib.Path(_project_folder) / f"seismic__*_{run_id}")
+        matches = _glob.glob(pattern)
+        if matches:
+            # Pick the most recently modified match in case of duplicates
+            resolved_folder = max(matches, key=lambda p: pathlib.Path(p).stat().st_mtime)
+
+    _update_status(run_id, final_status, output_folder=resolved_folder)
 
 
 async def stream_logs(run_id: str) -> AsyncGenerator[str, None]:
