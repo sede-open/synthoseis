@@ -119,7 +119,8 @@ export default function LaunchPanel({
   const [projectFolder, setProjectFolder] = React.useState(
     DEFAULT_CONFIG.project_folder
   );
-  const [workFolder, setWorkFolder] = React.useState(DEFAULT_CONFIG.work_folder);
+  // work_folder is always derived: <project_folder>/work
+  const workFolder = projectFolder.trim() ? `${projectFolder.trim()}/work` : "";
   const [runId, setRunId] = React.useState("");
 
   // Geometry
@@ -304,7 +305,6 @@ export default function LaunchPanel({
   function handleLoadDefaults() {
     setProject(DEFAULT_CONFIG.project);
     setProjectFolder("");
-    setWorkFolder(DEFAULT_CONFIG.work_folder);
     setRunId("");
     setCubeX(DEFAULT_CONFIG.cube_shape[0]);
     setCubeY(DEFAULT_CONFIG.cube_shape[1]);
@@ -465,29 +465,6 @@ export default function LaunchPanel({
                   try {
                     const picked = await browseDirectory(projectFolder || undefined);
                     if (picked) setProjectFolder(picked);
-                  } catch {
-                    // tkinter unavailable — user can type the path manually
-                  }
-                }}
-              />
-            }
-          />
-        </FormGroup>
-        <FormGroup label="Work folder" labelFor="work-folder">
-          <InputGroup
-            id="work-folder"
-            value={workFolder}
-            onChange={(e) => setWorkFolder(e.target.value)}
-            placeholder="~/synthoseis_work"
-            rightElement={
-              <Button
-                icon="folder-open"
-                minimal
-                title="Browse for folder"
-                onClick={async () => {
-                  try {
-                    const picked = await browseDirectory(workFolder || undefined);
-                    if (picked) setWorkFolder(picked);
                   } catch {
                     // tkinter unavailable — user can type the path manually
                   }
