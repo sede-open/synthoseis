@@ -31,7 +31,8 @@ export default function RunViewer({ folderId }: RunViewerProps): React.ReactElem
   const [crosslineDraft, setCrosslineDraft] = React.useState(0);
   // Sync draft when sliceIndex resets externally (e.g. volume switch).
   React.useEffect(() => { setCrosslineDraft(sliceIndex); }, [sliceIndex]);
-  const [colormap, setColormap] = React.useState("RdBu");
+  const [colormap, setColormap] = React.useState("Seismic");
+  const [colormapReversed, setColormapReversed] = React.useState(false);
 
   const entry: ManifestEntry | undefined = React.useMemo(() => {
     if (!manifest) return undefined;
@@ -157,7 +158,12 @@ export default function RunViewer({ folderId }: RunViewerProps): React.ReactElem
           <label className="bp5-label" style={{ marginBottom: 4 }}>
             Colormap
           </label>
-          <ColormapSelector value={colormap} onChange={setColormap} />
+          <ColormapSelector
+            value={colormap}
+            onChange={setColormap}
+            reversed={colormapReversed}
+            onReverseChange={setColormapReversed}
+          />
         </div>
       </div>
 
@@ -236,6 +242,7 @@ export default function RunViewer({ folderId }: RunViewerProps): React.ReactElem
               sliceType={sliceType}
               sliceIndex={sliceIndex}
               colormap={colormap}
+              reversed={colormapReversed}
             />
           ) : (
             <NonIdealState icon="layers" title="Select a volume" />
