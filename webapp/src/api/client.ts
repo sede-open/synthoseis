@@ -20,6 +20,26 @@ export async function fetchModels(): Promise<string[]> {
   return res.json();
 }
 
+/**
+ * Open a native OS folder-picker dialog on the server machine.
+ * Returns the selected absolute path, or null if the user cancelled.
+ * Throws if tkinter is unavailable (headless server).
+ */
+export async function browseDirectory(
+  initialDir?: string
+): Promise<string | null> {
+  const params = initialDir
+    ? `?initial_dir=${encodeURIComponent(initialDir)}`
+    : "";
+  const res = await fetch(`${BASE}/api/browse-directory${params}`);
+  if (!res.ok) {
+    const detail = await res.json().catch(() => ({}));
+    throw new Error(`GET /api/browse-directory: ${res.status} — ${JSON.stringify(detail)}`);
+  }
+  const { path } = await res.json();
+  return path ?? null;
+}
+
 // ---------------------------------------------------------------------------
 // Runs
 // ---------------------------------------------------------------------------

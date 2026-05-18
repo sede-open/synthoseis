@@ -34,7 +34,7 @@ const mockRuns: RunRecord[] = [
     config: {} as any,
     started_at: "2026-05-17T09:00:00",
     ended_at: "2026-05-17T09:30:00",
-    output_folder: "/scratch/results/my_run",
+    output_folder: "/tmp/results/my_run",
   },
   {
     run_id: "run-003",

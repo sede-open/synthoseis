@@ -13,8 +13,8 @@ from pydantic import ValidationError
 
 VALID_CONFIG = {
     "project": "example",
-    "project_folder": "/scratch/synthoseis_example",
-    "work_folder": "/scratch",
+    "project_folder": "/tmp/synthoseis_example",
+    "work_folder": "/tmp/synthoseis_work",
     "cube_shape": [300, 300, 1250],
     "incident_angles": [7, 15, 24],
     "digi": 4,

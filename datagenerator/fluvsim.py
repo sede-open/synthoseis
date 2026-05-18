@@ -22,9 +22,10 @@ plt = import_matplotlib()
 
 
 def create_fluvsim_params(
-    nx=100, ny=100, maxthickness=50, work_folder="/scratch"
+    nx=100, ny=100, maxthickness=50, work_folder=None
 ) -> None:
     """
+
     Create Fluvsim parameter file
     -----------------------------
 
@@ -40,7 +41,7 @@ def create_fluvsim_params(
     maxthickness : int, optional
         Maximum thickness, by default 50
     work_folder : str, optional
-        Default work folder, by default "/scratch"
+        Default work folder, by default the system temporary directory.
 
     Returns
     -------
@@ -215,6 +216,11 @@ def create_fluvsim_params(
 
     # avg_levee_l+'  '+avg_levee_m+'   '+avg_levee_h+'           -levee:    average width'+'\n'+\
 
+    # Resolve work_folder — fall back to system temp if not provided
+    import tempfile
+    if work_folder is None:
+        work_folder = tempfile.gettempdir()
+
     # write param file to disk
     params_file = os.path.abspath(os.path.join(work_folder, "fluvsim.par"))
     with open(params_file, "w") as paramfile:
@@ -222,7 +228,10 @@ def create_fluvsim_params(
     return
 
 
-def read_fluvsim_output(nx, ny, nz, work_folder="/scratch"):
+def read_fluvsim_output(nx, ny, nz, work_folder=None):
+    import tempfile
+    if work_folder is None:
+        work_folder = tempfile.gettempdir()
     # from scipy.ndimage.morphology import grey_closing
 
     output_file = os.path.abspath(os.path.join(work_folder, "output", "fluvsim.out"))
@@ -240,7 +249,10 @@ def read_fluvsim_output(nx, ny, nz, work_folder="/scratch"):
     return facies
 
 
-def run_fluvsim(nx=100, ny=100, maxthickness=50, work_folder="/scratch", quiet=True):
+def run_fluvsim(nx=100, ny=100, maxthickness=50, work_folder=None, quiet=True):
+    import tempfile
+    if work_folder is None:
+        work_folder = tempfile.gettempdir()
     # set up to work on scratch folder
     current_dir = os.getcwd()
     code_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)))
@@ -249,7 +261,7 @@ def run_fluvsim(nx=100, ny=100, maxthickness=50, work_folder="/scratch", quiet=T
     os.system("cp " + code_file + " " + workfolder_code_file)
     try:
         workfolder_output = os.path.abspath(os.path.join(work_folder, "output"))
-        os.system("mkdir -p " + workfolder_output + "&>/scratch/outputfile")
+        os.system("mkdir -p " + workfolder_output)
     except OSError:
         pass
     os.chdir(work_folder)

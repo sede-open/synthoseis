@@ -11,17 +11,19 @@ Usage:
 """
 import logging
 import os
+import tempfile
 
 
 def setup_logging(log_dir=None, level=None):
     """Configure root logger with file + console handlers.
 
     Args:
-        log_dir: Directory for log file. Falls back to GC_LOG_DIR env var, then /scratch.
+        log_dir: Directory for log file. Falls back to GC_LOG_DIR env var,
+                 then the system temporary directory.
         level: Log level string. Falls back to GC_LOG_LEVEL env var, then INFO.
     """
     if log_dir is None:
-        log_dir = os.environ.get("GC_LOG_DIR", "/scratch")
+        log_dir = os.environ.get("GC_LOG_DIR", tempfile.gettempdir())
     if level is None:
         level = os.environ.get("GC_LOG_LEVEL", "INFO")
 

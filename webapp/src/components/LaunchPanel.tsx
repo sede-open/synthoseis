@@ -23,7 +23,7 @@ import {
   Tag,
   Tooltip,
 } from "@blueprintjs/core";
-import { fetchModels, submitRun } from "../api/client";
+import { fetchModels, submitRun, browseDirectory } from "../api/client";
 import type { SimulationConfig } from "../types/simulation";
 
 // ---------------------------------------------------------------------------
@@ -32,8 +32,8 @@ import type { SimulationConfig } from "../types/simulation";
 
 const DEFAULT_CONFIG: SimulationConfig = {
   project: "rpm_example",
-  project_folder: "/scratch/synthoseis_example",
-  work_folder: "/scratch",
+  project_folder: "~/synthoseis_output",
+  work_folder: "~/synthoseis_work",
   run_id: undefined,
   cube_shape: [300, 300, 1250],
   incident_angles: [7, 15, 24],
@@ -445,7 +445,22 @@ export default function LaunchPanel({
             id="project-folder"
             value={projectFolder}
             onChange={(e) => setProjectFolder(e.target.value)}
-            placeholder="/scratch/my_project"
+            placeholder="~/synthoseis_output"
+            rightElement={
+              <Button
+                icon="folder-open"
+                minimal
+                title="Browse for folder"
+                onClick={async () => {
+                  try {
+                    const picked = await browseDirectory(projectFolder || undefined);
+                    if (picked) setProjectFolder(picked);
+                  } catch {
+                    // tkinter unavailable — user can type the path manually
+                  }
+                }}
+              />
+            }
           />
         </FormGroup>
         <FormGroup label="Work folder" labelFor="work-folder">
@@ -453,7 +468,22 @@ export default function LaunchPanel({
             id="work-folder"
             value={workFolder}
             onChange={(e) => setWorkFolder(e.target.value)}
-            placeholder="/scratch"
+            placeholder="~/synthoseis_work"
+            rightElement={
+              <Button
+                icon="folder-open"
+                minimal
+                title="Browse for folder"
+                onClick={async () => {
+                  try {
+                    const picked = await browseDirectory(workFolder || undefined);
+                    if (picked) setWorkFolder(picked);
+                  } catch {
+                    // tkinter unavailable — user can type the path manually
+                  }
+                }}
+              />
+            }
           />
         </FormGroup>
         <FormGroup label="Run ID (optional)" labelFor="run-id">

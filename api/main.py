@@ -2,6 +2,7 @@
 
 Routes:
   GET  /api/models                   - List available rock-physics models
+  GET  /api/browse-directory         - Open native OS folder-picker dialog
   GET  /api/runs                     - List all runs
   POST /api/runs                     - Submit a new simulation run
   GET  /api/runs/{run_id}            - Get a single run record
@@ -18,6 +19,8 @@ import asyncio
 import json
 import pathlib
 import subprocess
+import sys
+import tempfile
 import uuid
 from contextlib import asynccontextmanager
 
@@ -62,6 +65,36 @@ def get_models() -> list[str]:
     rpm_dir = REPO_ROOT / "rockphysics"
     exclude = {"__init__", "RockPropertyModels"}
     return [p.stem for p in sorted(rpm_dir.glob("*.py")) if p.stem not in exclude]
+
+
+@app.get("/api/browse-directory", response_model=dict)
+def browse_directory(initial_dir: str | None = None) -> dict:
+    """Open a native OS folder-picker dialog and return the selected path.
+
+    Uses tkinter.filedialog on all platforms (macOS native sheet, Linux GTK,
+    Windows Explorer). Returns {"path": null} if the user cancels.
+    """
+    start = initial_dir or str(pathlib.Path.home())
+    try:
+        import tkinter as tk
+        from tkinter import filedialog
+
+        root = tk.Tk()
+        root.withdraw()          # hide the empty Tk window
+        root.call("wm", "attributes", ".", "-topmost", True)  # dialog on top
+        chosen = filedialog.askdirectory(
+            initialdir=start,
+            title="Select folder",
+            mustexist=False,
+        )
+        root.destroy()
+        return {"path": chosen or None}
+    except Exception as exc:
+        # tkinter not available (headless server) — return a helpful error.
+        raise HTTPException(
+            status_code=501,
+            detail=f"Native folder picker unavailable on this system: {exc}",
+        )
 
 
 # ---------------------------------------------------------------------------

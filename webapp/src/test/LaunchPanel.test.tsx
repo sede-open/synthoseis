@@ -28,7 +28,7 @@ describe("LaunchPanel — form validation", () => {
   it("loads default values", async () => {
     render(<LaunchPanel />);
     // project_folder default
-    expect(screen.getByPlaceholderText("/scratch/my_project")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("~/synthoseis_output")).toBeInTheDocument();
   });
 
   it("shows thickness error when min >= max", async () => {
@@ -84,7 +84,7 @@ describe("LaunchPanel — form validation", () => {
     render(<LaunchPanel />);
 
     // Change project_folder
-    const projectFolderInput = screen.getByPlaceholderText("/scratch/my_project");
+    const projectFolderInput = screen.getByPlaceholderText("~/synthoseis_output");
     await user.clear(projectFolderInput);
     await user.type(projectFolderInput, "/custom/path");
     expect(projectFolderInput).toHaveValue("/custom/path");
@@ -93,7 +93,7 @@ describe("LaunchPanel — form validation", () => {
     const loadDefaultsBtn = screen.getByRole("button", { name: /load defaults/i });
     await user.click(loadDefaultsBtn);
 
-    expect(projectFolderInput).toHaveValue("/scratch/synthoseis_example");
+    expect(projectFolderInput).toHaveValue("~/synthoseis_output");
   });
 
   it("calls submitRun with correct data when form is valid", async () => {
