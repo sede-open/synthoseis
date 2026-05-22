@@ -150,12 +150,7 @@ def select_rpm(cfg):
         from rockphysics.rpm_example import RPMExample
 
         rpm = RPMExample(cfg)
-    elif cfg.project == "tagilsk":
-        from rockphysics.rpm_tagilsk import RPMTagilsk
-
-        print("Using the RPMTagilsk")
-        rpm = RPMTagilsk(cfg)
-    elif cfg.project == 'tagilsk-trends':
+    elif cfg.project == 'tagilsk':
         from rockphysics.rpm_tagilsk_trends import RPMTagilsk
 
         print("Using the RPMTagilsk trends")
