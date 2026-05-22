@@ -1,20 +1,11 @@
 import numpy as np
 from rockphysics.RockPropertyModels import RockProperties, store_1d_trend_dict_to_hdf
-import sys
-import os
-# Add the parent directory to the system path
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
-sys.path.insert(0, project_root)
-
+from rockphysics.rpm_abc import RPMABC
 
 #3800 max depth
-class RPMTagilsk():
+class RPMTagilsk(RPMABC):
     def __init__(self, cfg, *args, **kwargs):
-        self.cfg = cfg
-        self._shale_grid = None
-        self._brine_grid = None
-        self._oil_grid = None
-        self._gas_grid = None
+        super().__init__(cfg, *args, **kwargs)
 
     def create_1d_trends(self, z = None, store_in_hdf = False):
         if z is None:
@@ -103,31 +94,3 @@ class RPMTagilsk():
             return a * np.exp(b * d) + c
         param = [ 2.03767992e+07, 3.90733465e-08, -2.03752253e+07]
         return exp_func(z, *param)/np.sqrt(2)
-
-    def calc_shale_properties(self, z_rho, z_vp, z_vs):
-        rho = self.calc_shale_rho(z_rho)
-        vp = self.calc_shale_vp(z_vp)
-        vs = self.calc_shale_vs(z_vs)
-        shales = RockProperties(rho, vp, vs)
-        return shales
-
-    def calc_brine_sand_properties(self, z_rho, z_vp, z_vs):
-        rho = self.calc_brine_sand_rho(z_rho)
-        vp = self.calc_brine_sand_vp(z_vp)
-        vs = self.calc_brine_sand_vs(z_vs)
-        brine_sand = RockProperties(rho, vp, vs)
-        return brine_sand
-
-    def calc_oil_sand_properties(self, z_rho, z_vp, z_vs):
-        rho = self.calc_oil_sand_rho(z_rho)
-        vp = self.calc_oil_sand_vp(z_vp)
-        vs = self.calc_oil_sand_vs(z_vs)
-        oil_sand = RockProperties(rho, vp, vs)
-        return oil_sand
-
-    def calc_gas_sand_properties(self, z_rho, z_vp, z_vs):
-        rho = self.calc_gas_sand_rho(z_rho)
-        vp = self.calc_gas_sand_vp(z_vp)
-        vs = self.calc_gas_sand_vs(z_vs)
-        gas_sand = RockProperties(rho, vp, vs)
-        return gas_sand
