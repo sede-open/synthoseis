@@ -150,11 +150,11 @@ def select_rpm(cfg):
         from rockphysics.rpm_example import RPMExample
 
         rpm = RPMExample(cfg)
-    elif cfg.project == "abc":
-        from rockphysics.rpm_abc import RPMABC
+    elif cfg.project == 'tagilsk':
+        from rockphysics.rpm_tagilsk_trends import RPMTagilsk
 
-        print("Using the abcRPM")
-        rpm = RPMABC(cfg)
+        print("Using the RPMTagilsk trends")
+        rpm = RPMTagilsk(cfg)
     else:
         print("No rock property model defined in select_rpm")
         print("Exiting code")

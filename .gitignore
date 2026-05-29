@@ -1,4 +1,6 @@
+RESEARCH_DOCUMENTATION.md
 project
+.venv/*
 *.pyc
 *~
 backup

@@ -2,14 +2,15 @@ import numpy as np
 from rockphysics.RockPropertyModels import RockProperties, store_1d_trend_dict_to_hdf
 from rockphysics.rpm_abc import RPMABC
 
-class RPMExample(RPMABC):
+#3800 max depth
+class RPMTagilsk(RPMABC):
     def __init__(self, cfg, *args, **kwargs):
         super().__init__(cfg, *args, **kwargs)
 
-    def create_1d_trends(self, z=None, store_in_hdf=True):
+    def create_1d_trends(self, z = None, store_in_hdf = False):
         if z is None:
             z = np.arange(self.cfg.cube_shape[-1] * self.cfg.digi)
-
+        
         d = dict(
             z=z,
             shale_vp=self.calc_shale_vp(z),
@@ -29,51 +30,67 @@ class RPMExample(RPMABC):
             store_1d_trend_dict_to_hdf(self.cfg, d, z)
 
         return d
-
+    
     @staticmethod
     def calc_shale_rho(z):
-        return 7.7e-12 * z**3 + -8.8e-08 * z**2 + 0.0004 * z + 1.957
+        param = [-3.27905787e-12, 1.86750139e-08, 9.64773845e-05, 2.09709627e+00]
+        return np.polyval(param, z)
 
     @staticmethod
     def calc_shale_vp(z):
-        return -0.00013 * z**2 + 1.13 * z + 1580
+        param = [-2.86940692e-04, 2.02356702e+00, 5.13645163e+02]
+        return np.polyval(param, z)
 
     @staticmethod
     def calc_shale_vs(z):
-        return -0.0001 * z**2 + 0.96 * z + 279
+        param = [-1.51184658e-04, 1.11423506e+00, 2.17341849e+02]
+        return np.polyval(param, z)
 
     @staticmethod
     def calc_brine_sand_rho(z):
-        return -7.8e-09 * z**2 + 0.00012 * z + 2.021
+        param = [1.62260122e-08, 4.19501863e-05, 2.10717208e+00]
+        return np.polyval(param, z)
 
     @staticmethod
     def calc_brine_sand_vp(z):
-        return -1.34e-05 * z**2 + 0.49 * z + 2317
+        param = [-1.72905613e-04, 1.39902406e+00, 1.15717554e+03]
+        return np.polyval(param, z)
 
     @staticmethod
     def calc_brine_sand_vs(z):
-        return -1.0785e-05 * z**2 + 0.391 * z + 1007
+        param = [-4.86767619e-05, 6.08845432e-01, 7.40710471e+02]
+        return np.polyval(param, z)
 
     @staticmethod
     def calc_oil_sand_rho(z):
-        return -9.23e-09 * z**2 + 0.00014 * z + 1.916
+        param = [ 1.82457149e-11, -1.54547807e-07, 5.46493718e-04, 1.66744366e+00]
+        return np.polyval(param, z)
 
     @staticmethod
     def calc_oil_sand_vp(z):
-        return -8.876e-06 * z**2 + 0.505 * z + 1998
+        param = [-1.05896142e-07, 5.08492087e-04, 3.15498496e-01, 1.44786139e+03]
+        return np.polyval(param, z)
 
     @staticmethod
     def calc_oil_sand_vs(z):
-        return -1.126e-05 * z**2 + 0.391 * z + 1036
+        param = [-1.05101834e-07, 5.90901816e-04, -2.71462741e-01, 7.21829913e+02]
+        return np.polyval(param, z)
 
     @staticmethod
     def calc_gas_sand_rho(z):
-        return -1.818e-08 * z**2 + 0.000247 * z + 1.612
-
+        param = [-5.43088129e-08, 4.16689269e-04, 1.69501400e+00]
+        return np.polyval(param, z)
+    
     @staticmethod
     def calc_gas_sand_vp(z):
-        return -3.216e-06 * z**2 + 0.4796 * z + 1996
+        def exp_func(d, a, b, c):
+            return a * np.exp(b * d) + c
+        param = [ 2.03767992e+07, 3.90733465e-08, -2.03752253e+07]
+        return exp_func(z, *param)
 
     @staticmethod
     def calc_gas_sand_vs(z):
-        return -1.0687e-05 * z**2 + 0.3662 * z + 1135
+        def exp_func(d, a, b, c):
+            return a * np.exp(b * d) + c
+        param = [ 2.03767992e+07, 3.90733465e-08, -2.03752253e+07]
+        return exp_func(z, *param)/np.sqrt(2)
